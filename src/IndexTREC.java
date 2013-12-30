@@ -53,6 +53,18 @@ public class IndexTREC {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
 			Directory dir = FSDirectory.open(new File(indexPath));
+
+			/* switch on:
+			ClassicAnalyzer
+			StandardAnalyzer
+			WhiteSpaceAnalyzer
+			EnglishAnalyzer(Version matchVersion) : only stopword removal, default list
+			EnglishAnalyzer(Version matchVersion, CharArraySet stopwords) : our stop list
+			SStemAnalyzer
+			PortetStemAnalyzer
+			KStemAnalyzer
+			*/
+			
 			Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_41);
 			IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_41, analyzer);
 
