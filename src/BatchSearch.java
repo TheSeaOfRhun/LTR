@@ -77,7 +77,7 @@ public class BatchSearch {
 		IndexReader reader = DirectoryReader.open(FSDirectory.open(new File(index)));
 		IndexSearcher searcher = new IndexSearcher(reader);
 		searcher.setSimilarity(simfn);
-		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_41);
+		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_46);
 		
 		BufferedReader in = null;
 		if (queries != null) {
@@ -85,7 +85,7 @@ public class BatchSearch {
 		} else {
 			in = new BufferedReader(new InputStreamReader(new FileInputStream("queries"), "UTF-8"));
 		}
-		QueryParser parser = new QueryParser(Version.LUCENE_41, field, analyzer);
+		QueryParser parser = new QueryParser(Version.LUCENE_46, field, analyzer);
 		while (true) {
 			String line = in.readLine();
 

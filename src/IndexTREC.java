@@ -12,15 +12,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
-// TODO: fix lucene version
-
 public class IndexTREC {
 
 	private IndexTREC() {}
 	
 	public static void main(String[] args) {
 		String usage = "java org.apache.lucene.demo.IndexFiles"
-				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-stemmer STEMMER_NAME]\n\n"
+				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-stop STOP_FILE] [-stem STEMMER_NAME]\n\n"
 				+ "This indexes the documents in DOCS_PATH, creating a Lucene index"
 				+ "in INDEX_PATH that can be searched with SearchFiles"
 		                + "ignoring stop words from STOP_FILE"
@@ -44,7 +42,7 @@ public class IndexTREC {
 			} else if ("-stop".equals(args[i])) {
 			    opt[0] = args[i+1];
 			    i++;
-			} else if ("-stemmer".equals(args[i])) {
+			} else if ("-stem".equals(args[i])) {
 			    opt[1] = args[i+1];
 			    i++;
 			}
@@ -66,8 +64,8 @@ public class IndexTREC {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
 			Directory dir = FSDirectory.open(new File(indexPath));
-			TrecAnalyzer analyzer = new TrecAnalyzer(opt);
-			IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_41, analyzer);
+			TrecAnalyzer analyzer = new TrecAnalyzer(Version.LUCENE_46, opt);
+			IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 
 			if (create) {
 				// Create a new index in the directory, removing any
