@@ -12,6 +12,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
+// TODO: fix lucene version
 
 public class IndexTREC {
 
@@ -19,12 +20,18 @@ public class IndexTREC {
 	
 	public static void main(String[] args) {
 		String usage = "java org.apache.lucene.demo.IndexFiles"
-				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
+				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-stemmer STEMMER_NAME]\n\n"
 				+ "This indexes the documents in DOCS_PATH, creating a Lucene index"
-				+ "in INDEX_PATH that can be searched with SearchFiles";
-		String indexPath = "index";
-		String docsPath = null;
-		boolean create = true;
+				+ "in INDEX_PATH that can be searched with SearchFiles"
+		                + "ignoring stop words from STOP_FILE"
+		                + "and stemming using STEMMER_NAME";
+		
+
+		String  indexPath = "index";
+		String  docsPath  = null;
+		boolean create    = true;
+		String[] opt = new String[2];
+
 		for(int i=0;i<args.length;i++) {
 			if ("-index".equals(args[i])) {
 				indexPath = args[i+1];
@@ -34,9 +41,15 @@ public class IndexTREC {
 				i++;
 			} else if ("-update".equals(args[i])) {
 				create = false;
+			} else if ("-stop".equals(args[i])) {
+			    opt[0] = args[i+1];
+			    i++;
+			} else if ("-stemmer".equals(args[i])) {
+			    opt[1] = args[i+1];
+			    i++;
 			}
 		}
-
+		
 		if (docsPath == null) {
 			System.err.println("Usage: " + usage);
 			System.exit(1);
@@ -53,19 +66,7 @@ public class IndexTREC {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
 			Directory dir = FSDirectory.open(new File(indexPath));
-
-			/* switch on:
-			ClassicAnalyzer
-			StandardAnalyzer
-			WhiteSpaceAnalyzer
-			EnglishAnalyzer(Version matchVersion) : only stopword removal, default list
-			EnglishAnalyzer(Version matchVersion, CharArraySet stopwords) : our stop list
-			SStemAnalyzer
-			PortetStemAnalyzer
-			KStemAnalyzer
-			*/
-			
-			Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_41);
+			TrecAnalyzer analyzer = new TrecAnalyzer(opt);
 			IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_41, analyzer);
 
 			if (create) {
