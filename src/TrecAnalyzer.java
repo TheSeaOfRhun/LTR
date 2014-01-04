@@ -35,7 +35,7 @@ class TrecAnalyzer extends Analyzer {
 		    s.close();
 		    stopwords = StopFilter.makeStopSet(v, list);
 	       } catch (IOException e) {
-		    System.out.println(" caught a " + e.getClass() +
+		    System.out.println(" caught a " + e.getClass() + 
 				       "\n with message: " + e.getMessage());
 	       }
 	  }
