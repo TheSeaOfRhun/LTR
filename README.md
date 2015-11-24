@@ -7,29 +7,26 @@ command-line, a TREC-like document corpus to index, and then retrieve
 documents using the index with `BatchSearch`, to which a set of
 queries is passed as input.
 
-###### Note
+###### Indexing
 
-Assuming the trees below, for TREC data-locations and `lucene.TREC` on a
-file-system, run the commands that follow, to get a corpus indexed and
-searched. Some points to note, and help clarify meaning:
+```
+java -cp /x/lucene.TREC/lib/*
+     IndexTREC -index /x/index/CD45
+               -docs  /x/doc/CD45
+               -stop  /x/misc/ser17
+               -stem  sstemmer
+```
 
-- Command-line invocations below have been formatted for readability,
-  everything should go in one line.
+###### Retrieval
 
-- `/x` is a imaginary, the layout does not have to be this. It is only
-  to point out how to point the tool to the data.
-
-- `/x/index/CD45.017.s` is an empty directory that was created before
-  passing it on to `IndexTREC`. The naming is arbitrary, but, if you use
-  [trecbox](https://github.com/sauparna/trecbox) to drive `lucene.TREC`,
-  it will have a meaning.
-
-- `/x/misc/ser17` is a plain text file containing a list of stop-words,
-  one on each line.
-
-- `/x/query/301-350` is a plain text file containing TREC queries.
-
-- `sstemmer` tells Lucene to use the *S-Stemmer*.
+```
+java -cp /x/lucene.TREC/lib/*
+      BatchSearch -index   /x/index/CD45
+                  -queries /x/query/301-350
+                  -simfn   bm25
+                  -stop    /x/misc/ser17
+                  -stem    sstemmer
+```
 
 ###### lucene.TREC
 
@@ -69,23 +66,26 @@ searched. Some points to note, and help clarify meaning:
 └── runs
 ```
 
-###### Indexing
+###### Note
 
-```
-java -cp /x/lucene.TREC/lib/*
-     IndexTREC -index /x/index/CD45
-               -docs  /x/doc/CD45
-               -stop  /x/misc/ser17
-               -stem  sstemmer
-```
+Assuming the trees below, for TREC data-locations and `lucene.TREC` on a
+file-system, run the commands that follow, to get a corpus indexed and
+searched. Some points to note, and help clarify meaning:
 
-###### Retrieval
+- Command-line invocations below have been formatted for readability,
+  everything should go in one line.
 
-```
-java -cp /x/lucene.TREC/lib/*
-      BatchSearch -index   /x/index/CD45
-                  -queries /x/query/301-350
-                  -simfn   bm25
-                  -stop    /x/misc/ser17
-                  -stem    sstemmer
-```
+- `/x` is a imaginary, the layout does not have to be this. It is only
+  to point out how to point the tool to the data.
+
+- `/x/index/CD45.017.s` is an empty directory that was created before
+  passing it on to `IndexTREC`. The naming is arbitrary, but, if you use
+  [trecbox](https://github.com/sauparna/trecbox) to drive `lucene.TREC`,
+  it will have a meaning.
+
+- `/x/misc/ser17` is a plain text file containing a list of stop-words,
+  one on each line.
+
+- `/x/query/301-350` is a plain text file containing TREC queries.
+
+- `sstemmer` tells Lucene to use the *S-Stemmer*.
