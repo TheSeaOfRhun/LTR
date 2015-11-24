@@ -63,9 +63,7 @@ java -cp /x/lucene.TREC/lib/*
 
 ###### Note
 
-Assuming the trees below, for TREC data-locations and `lucene.TREC` on a
-file-system, run the commands that follow, to get a corpus indexed and
-searched. Some points to note, and help clarify meaning:
+A few points to note, and help clarify meaning:
 
 - Command-line invocations below have been formatted for readability,
   everything should go in one line.
@@ -83,16 +81,16 @@ searched. Some points to note, and help clarify meaning:
 
 - `/x/query/301-350` is a plain text file containing TREC queries
   where each query is enclosed in a <TOP> tag. There are as many <TOP>
-  tags as there are queries. [trecbox]() takes care of creating this
-  structure.Otherwise you have to write a program to do so. This was
-  necessary because the older (early 1990's) TREC queries used a
-  different structure.
+  tags as there are
+  queries. [trecbox](https://github.com/sauparna/trecbox) takes care
+  of creating this structure. Otherwise you have to write a program to
+  do so. This pre-processing of query files was necessary because the
+  older (early 1990's) TREC queries used a different structure, and
+  the interntion is to have backward compatibility.
 
   ```
   <TOP>
-    <NUM>
-     301
-    </NUM>
+    <NUM>301</NUM>
     <TEXT>
      hello world
     </TEXT>
