@@ -1,5 +1,5 @@
 Here is a set of tools to run Lucene (5.3.1) on TREC collections. To
-build it run 'ant' from inside the *lucene.TREC* directory. The Lucene
+build it run `ant` from inside the `lucene.TREC` directory. The Lucene
 libraries live in `lib`, the TREC-like classes in `bin` and the
 tool-set is bundled into `lib/lucene.TREC.jar`. The usual way to use
 it on TREC test collections is to pass `IndexTREC`, at the
@@ -9,7 +9,7 @@ queries is passed as input.
 
 ###### Note
 
-Assuming the trees below, for TREC data-locations and *lucene.TREC* on a
+Assuming the trees below, for TREC data-locations and `lucene.TREC` on a
 file-system, run the commands that follow, to get a corpus indexed and
 searched. Some points to note, and help clarify meaning:
 
@@ -83,9 +83,9 @@ java -cp /x/lucene.TREC/lib/*
 
 ```
 java -cp /x/lucene.TREC/lib/*
-BatchSearch -index /x/index/CD45
-            -queries /x/query/301-350
-            -simfn   bm25
-            -stop    /x/misc/ser17
-            -stem    sstemmer
+      BatchSearch -index   /x/index/CD45
+                  -queries /x/query/301-350
+                  -simfn   bm25
+                  -stop    /x/misc/ser17
+                  -stem    sstemmer
 ```
