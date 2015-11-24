@@ -36,11 +36,6 @@ java -cp /x/lucene.TREC/lib/*
 ├── bin
 ├── build.xml
 ├── lib
-│   ├── commons-io-2.4.jar
-│   ├── jsoup-1.8.3.jar
-│   ├── lucene-analyzers-common-5.3.1.jar
-│   ├── lucene-core-5.3.1.jar
-│   ├── lucene-queryparser-5.3.1.jar
 │   └── lucene.TREC.jar
 └── src
 ```
@@ -86,6 +81,16 @@ searched. Some points to note, and help clarify meaning:
 - `/x/misc/ser17` is a plain text file containing a list of stop-words,
   one on each line.
 
-- `/x/query/301-350` is a plain text file containing TREC queries.
-
+- `/x/query/301-350` is a plain text file containing TREC queries in a formatted in this way:
+  ```
+  <TOP>
+   <NUM>
+     301
+   </NUM>
+   <TEXT>
+     hello world
+   </TEXT>
+  <TOP>
+  ```
+  
 - `sstemmer` tells Lucene to use the *S-Stemmer*.
