@@ -19,7 +19,8 @@ searched. Some points to note, and help clarify meaning:
 
 - `/x/index/CD45.017.s` is an empty directory that was created before
   passing it on to IndexTREC. The naming is arbitrary, but, if you use
-  trecbox to drive lucene.TREC, it will have a meaning.
+  [trecbox](https://github.com/sauparna/trecbox) to drive lucene.TREC,
+  it will have a meaning.
 
 - /x/misc/ser17 is a plain text file containing a list of stop-words,
   one on each line.
