@@ -6,6 +6,8 @@ test collections is to pass IndexTREC, at the command-line, a
 TREC-like document corpus to index, and then retrieve documents from
 the index using a set of queries.
 
+###### Note
+
 Assuming the trees below, for TREC data-locations and lucene.TREC on a
 file-system, run the commands that follow, to get a corpus indexed and
 searched. Some points to note, and help clarify meaning:
@@ -15,12 +17,12 @@ searched. Some points to note, and help clarify meaning:
 - /x is a imaginary, the layout does not have to be this. It is only
   to point out how to point the tool to the data.
 
-- /x/index/CD45.017.s is an empty directory that was created before
-passing it on to IndexTREC. The naming is arbitrary, but, if you use
-trecbox to drive lucene.TREC, it will have a meaning.
+- `/x/index/CD45.017.s` is an empty directory that was created before
+  passing it on to IndexTREC. The naming is arbitrary, but, if you use
+  trecbox to drive lucene.TREC, it will have a meaning.
 
 - /x/misc/ser17 is a plain text file containing a list of stop-words,
-one on each line.
+  one on each line.
 
 - /x/query/301-350 is a plain text file containing TREC queries.
 
