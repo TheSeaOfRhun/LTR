@@ -1,11 +1,10 @@
 Here is a set of tools to run Lucene (5.3.1) on TREC collections. To
 build it run `ant` from inside the `lucene.TREC` directory. The Lucene
-libraries live in `lib`, the TREC-like classes in `bin` and the
-tool-set is bundled into `lib/lucene.TREC.jar`. The usual way to use
-it on TREC test collections is to pass `IndexTREC`, at the
-command-line, a TREC-like document corpus to index, and then retrieve
-documents using the index with `BatchSearch`, to which a set of
-queries is passed as input.
+libraries live in `lib`, the classes in `bin` and the tool-set is
+bundled into `lib/lucene.TREC.jar`. The usual way to use it on TREC
+test collections is to pass `IndexTREC`, at the command-line, a
+TREC-like document corpus to index, and then retrieve documents using
+the index with `BatchSearch`, with a set of queries as input.
 
 ###### Indexing
 
