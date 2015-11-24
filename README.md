@@ -1,33 +1,35 @@
 Here is a set of tools to run Lucene (5.3.1) on TREC collections. To
 build it run 'ant' from inside the *lucene.TREC* directory. The Lucene
-libraries live in lib, the TREC-like classes in bin and the tool-set
-is bundled into lib/lucene.TREC.jar. The usual way to use it on TREC
-test collections is to pass IndexTREC, at the command-line, a
-TREC-like document corpus to index, and then retrieve documents from
-the index using a set of queries.
+libraries live in `lib`, the TREC-like classes in `bin` and the
+tool-set is bundled into `lib/lucene.TREC.jar`. The usual way to use
+it on TREC test collections is to pass `IndexTREC`, at the
+command-line, a TREC-like document corpus to index, and then retrieve
+documents using the index with `BatchSearch`, to which a set of
+queries is passed as input.
 
 ###### Note
 
-Assuming the trees below, for TREC data-locations and lucene.TREC on a
+Assuming the trees below, for TREC data-locations and *lucene.TREC* on a
 file-system, run the commands that follow, to get a corpus indexed and
 searched. Some points to note, and help clarify meaning:
 
-- command-line invocations below have been formatted for readability.
+- Command-line invocations below have been formatted for readability,
+  everything should go in one line.
 
-- /x is a imaginary, the layout does not have to be this. It is only
+- `/x` is a imaginary, the layout does not have to be this. It is only
   to point out how to point the tool to the data.
 
 - `/x/index/CD45.017.s` is an empty directory that was created before
-  passing it on to IndexTREC. The naming is arbitrary, but, if you use
-  [trecbox](https://github.com/sauparna/trecbox) to drive lucene.TREC,
+  passing it on to `IndexTREC`. The naming is arbitrary, but, if you use
+  [trecbox](https://github.com/sauparna/trecbox) to drive `lucene.TREC`,
   it will have a meaning.
 
-- /x/misc/ser17 is a plain text file containing a list of stop-words,
+- `/x/misc/ser17` is a plain text file containing a list of stop-words,
   one on each line.
 
-- /x/query/301-350 is a plain text file containing TREC queries.
+- `/x/query/301-350` is a plain text file containing TREC queries.
 
-- sstemmer tells Lucene to use the S-Stemmer.
+- `sstemmer` tells Lucene to use the *S-Stemmer*.
 
 ###### lucene.TREC
 
@@ -73,8 +75,8 @@ searched. Some points to note, and help clarify meaning:
 java -cp /x/lucene.TREC/lib/*
      IndexTREC -index /x/index/CD45
                -docs  /x/doc/CD45
-	       -stop  /x/misc/ser17
-	       -stem  sstemmer
+               -stop  /x/misc/ser17
+               -stem  sstemmer
 ```
 
 ###### Retrieval
