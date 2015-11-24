@@ -81,15 +81,21 @@ searched. Some points to note, and help clarify meaning:
 - `/x/misc/ser17` is a plain text file containing a list of stop-words,
   one on each line.
 
-- `/x/query/301-350` is a plain text file containing TREC queries in a formatted in this way:
+- `/x/query/301-350` is a plain text file containing TREC queries
+  where each query is enclosed in a <TOP> tag. There are as many <TOP>
+  tags as there are queries. [trecbox]() takes care of creating this
+  structure.Otherwise you have to write a program to do so. This was
+  necessary because the older (early 1990's) TREC queries used a
+  different structure.
+
   ```
   <TOP>
-   <NUM>
+    <NUM>
      301
-   </NUM>
-   <TEXT>
+    </NUM>
+    <TEXT>
      hello world
-   </TEXT>
+    </TEXT>
   <TOP>
   ```
   
