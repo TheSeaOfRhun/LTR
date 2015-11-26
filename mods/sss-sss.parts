@@ -1,0 +1,18 @@
+TF
+b:1.0f
+t:tf
+n:0.5f + 0.5f * tf / max(tf):OFF
+l:log(tf)
+
+IDF
+x:1.0f
+f:log(N / n)
+p:log((N - n) / n)
+i:log((N - n + 0.5f) / (n + 0.5f))
+
+LN
+x:1.0f
+c:1.0f / |v|:OFF
+d:dl
+l:log(dl)
+a:log(dl / adl)
