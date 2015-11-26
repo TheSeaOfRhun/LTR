@@ -110,7 +110,7 @@ public class BM25 extends Similarity {
 	@Override
 	public float score(int doc, float tf)
 	{
-	    return ((k1 + 1) * tf) / ((K[(byte)norms.get(doc) & 0xFF]) + tf) * bw.idf; 
+	    return ((k1 + 1) * tf) / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf; 
 	}
 
 	@Override
