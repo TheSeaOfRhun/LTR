@@ -30,7 +30,7 @@ public class BatchSearch {
 	throws Exception
     {
 	String usage = "Usage:\tjava BatchSearch"
-	    + " [-index dir] [-simfn similarity]"
+	    + " [-index dir] [-similarity similarity]"
 	    + " [-field f] [-queries file]"
 	    + " [-stop STOP_FILE] [-stem STEMMER_NAME]\n";
 		
@@ -43,7 +43,7 @@ public class BatchSearch {
 	String index     = "index";
 	String field     = "contents";
 	String queries   = null;
-	String simstr    = "default";
+	String simstr    = null;
 	String[] opt     = new String[2];
 
 	for(int i = 0; i < args.length; i++) {
@@ -56,7 +56,7 @@ public class BatchSearch {
 	    } else if ("-queries".equals(args[i])) {
 		queries = args[i+1];
 		i++;
-	    } else if ("-simfn".equals(args[i])) {
+	    } else if ("-similarity".equals(args[i])) {
 		simstr = args[i+1];
 		i++;
 	    } else if ("-stop".equals(args[i])) {
@@ -68,64 +68,51 @@ public class BatchSearch {
 	    }
 	}
 
-	HashMap<String, Object> model_map = new HashMap<String, Object>();
-	String pkg = "org.apache.lucene.search.similarities.";
-	model_map.put("default",
-		      Class
-		      .forName(pkg + "DefaultSimilarity")
-		      .getConstructor()
-		      .newInstance()
-		      );
-	model_map.put("tmpl",
-		      Class
-		      .forName("TMPL")
-		      .getConstructor()
-		      .newInstance()
-		      );
-	model_map.put("bm25",
-		      Class
-		      .forName("BM25Sim")
-		      .getConstructor()
-		      .newInstance()
-		      );
-	model_map.put("bm25L",
-		      Class
-		      .forName(pkg + "BM25Similarity")
-		      .getConstructor()
-		      .newInstance()
-		      );
-	model_map.put("dfr",
-		      Class
-		      .forName(pkg + "DFRSimilarity")
-		      .getConstructor(BasicModel.class,
-				      AfterEffect.class,
-				      Normalization.class)
-		      .newInstance(new BasicModelP(),
-				   new AfterEffectL(),
-				   new NormalizationH2())
-		      );
-	model_map.put("lm",
-		      Class
-		      .forName(pkg + "LMDirichletSimilarity")
-		      .getConstructor()
-		      .newInstance()
-		      );
-
-	Similarity simfn = (Similarity)model_map.get(simstr);
-
-	if (simfn == null) {
-	    System.out.println("Unsupported: " + simfn + "\n");
+       	if (simstr == null) {
+	    System.out.println("BatchSearch: Similarity not specified\n");
 	    System.exit(0);
 	}
 
-	if (queries == null) {
-	    System.out.println("Query file not specified\n");
+       	if (queries == null) {
+	    System.out.println("BatchSearch: Query file not specified\n");
+	    System.exit(0);
+	}
+
+	
+	String pkg = "org.apache.lucene.search.similarities.";
+	Similarity similarity = null;
+
+	if (simstr.equals("DFRSimilarity")) {
+	    similarity = (Similarity)Class
+		.forName(pkg + simstr)
+		.getConstructor(BasicModel.class,
+				AfterEffect.class,
+				Normalization.class)
+		.newInstance(new BasicModelP(),
+			     new AfterEffectL(),
+			     new NormalizationH2());
+	}
+	else if (simstr.endsWith("Similarity")) {
+	    similarity = (Similarity)Class
+		.forName(pkg + simstr)
+		.getConstructor()
+		.newInstance();
+	}
+	else {
+	    similarity = (Similarity)Class
+		.forName(simstr)
+		.getConstructor()
+		.newInstance();
+	}
+
+	if (similarity == null) {
+	    System.out.println("BatchSearch: Unsupported similarity class: " + similarity + "\n");
 	    System.exit(0);
 	}
 		
 	IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
 	IndexSearcher searcher = new IndexSearcher(reader);
-	searcher.setSimilarity(simfn);
+	searcher.setSimilarity(similarity);
 	TrecAnalyzer analyzer = new TrecAnalyzer(opt);
 	SimpleQueryParser parser = new SimpleQueryParser(analyzer, field);
 		
