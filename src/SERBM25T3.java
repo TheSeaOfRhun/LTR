@@ -15,7 +15,9 @@ import org.apache.lucene.util.SmallFloat;
 import java.io.IOException;
 import java.util.Collections;
 
-public class LID extends Similarity {
+public class SERBM25T3 extends Similarity {
+    private static float k1;
+    private static float b;
 
     private static final float[] NORM = new float[256];    
     static {
@@ -24,7 +26,12 @@ public class LID extends Similarity {
 	}
     }
     
-    public LID() {}
+    public SERBM25T3()
+    {
+	k1 = 2.0f;
+	b  = 0.75f;
+	    
+    }
 
     public float log(double x)
     {
@@ -57,14 +64,14 @@ public class LID extends Similarity {
 	else {
 	    for (final TermStatistics stat : termStats) {
 		n = stat.docFreq();
-		idf += log((N - n + 0.5f) / (n + 0.5f));
+		idf +=  log((N - n + 0.5f) / (n + 0.5f));
 	    }
 	}
 	
 	float K[] = new float[256];
 	for (int i = 0; i < K.length; i++) {
 	    dl = decodeNorm((byte)i);
-	    K[i] = dl;
+	    K[i] = k1 * (1- b + b * (dl / adl));
 	}
 
 	return new TFIDFWeight(collectionStats.field(), idf, adl, K);
@@ -95,7 +102,7 @@ public class LID extends Similarity {
 	@Override
 	public float score(int doc, float tf)
 	{
-	    float w = log(tf) / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
+	    float w = tf / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf;
 	    return w;
 	}
 

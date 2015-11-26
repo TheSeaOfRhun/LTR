@@ -67,24 +67,24 @@ public class TXX extends Similarity {
 	    K[i] = 1.0f;
 	}
 
-	return new BM25Weight(collectionStats.field(), idf, adl, K);
+	return new TFIDFWeight(collectionStats.field(), idf, adl, K);
     }
 
     @Override
     public final SimScorer simScorer(SimWeight sw, LeafReaderContext context)
 	throws IOException
     {
-	BM25Weight bw = (BM25Weight) sw;
-	return new BM25Scorer(bw, context.reader().getNormValues(bw.field));
+	TFIDFWeight bw = (TFIDFWeight) sw;
+	return new TFIDFScorer(bw, context.reader().getNormValues(bw.field));
     }
 
-    public class BM25Scorer extends SimScorer
+    public class TFIDFScorer extends SimScorer
     {
-	private final BM25Weight bw;
+	private final TFIDFWeight bw;
 	private final NumericDocValues norms;
 	private final float[] K;
     
-	BM25Scorer(BM25Weight bw, NumericDocValues norms)
+	TFIDFScorer(TFIDFWeight bw, NumericDocValues norms)
 	    throws IOException
 	{
 	    this.bw    = bw;
@@ -112,14 +112,14 @@ public class TXX extends Similarity {
 	}
     }
   
-    public static class BM25Weight extends SimWeight
+    public static class TFIDFWeight extends SimWeight
     {
 	private final String field;
 	private final float idf;
 	private final float adl;
 	private final float K[];
 	
-	public BM25Weight(String field, float idf, float adl, float K[])
+	public TFIDFWeight(String field, float idf, float adl, float K[])
 	{
 	    this.field = field;
 	    this.idf   = idf;
