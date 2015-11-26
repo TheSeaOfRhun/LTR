@@ -15,10 +15,10 @@ import org.apache.lucene.util.SmallFloat;
 import java.io.IOException;
 import java.util.Collections;
 
-public class BM25 extends Similarity {
-
-    private final float k1;
-    private final float b;
+public class BM25 extends Similarity
+{
+    private static float k1;
+    private static float b;
     private static final float[] NORM = new float[256];    
     static {
 	for (int i = 0; i < 256; i++) {
@@ -28,19 +28,19 @@ public class BM25 extends Similarity {
     
     public BM25()
     {
-	this.k1 = 1.2f;
-	this.b  = 0.75f;
+	k1 = 1.2f;
+	b  = 0.75f;
     }
 
     public BM25(float k1, float b)
     {
-	this.k1 = k1;
-	this.b  = b;
+	k1 = k1;
+	b  = b;
     }
 
-    public double log(double x)
+    public float log(double x)
     {
-	return Math.log(x) / Math.log(2.0D);
+	return (float)(Math.log(x) / Math.log(2.0D));
     }
 
     public float coord(int overlap, int maxOverlap)
@@ -65,12 +65,12 @@ public class BM25 extends Similarity {
 
 	if (termStats.length == 1) {
 	    n = termStats[0].docFreq();
-	    idf = (float)log(1.0D + (N - n + 0.5D) / (n + 0.5D));
+	    idf = log(1.0f + (N - n + 0.5f) / (n + 0.5f));
 	}
 	else {
 	    for (final TermStatistics stat : termStats) {
 		n = stat.docFreq();
-		idf += (float)log(1.0D + (N - n + 0.5D) / (n + 0.5D));
+		idf += log(1.0f + (N - n + 0.5f) / (n + 0.5f));
 	    }
 	}
 	
@@ -79,7 +79,7 @@ public class BM25 extends Similarity {
 	float K[] = new float[256];
 	for (int i = 0; i < K.length; i++) {
 	    dl = decodeNorm((byte)i);
-	    K[i] = k1 * (1- b + b * (dl / adl));
+	    K[i] = k1 * (1.0f - b + b * (dl / adl));
 	}
 
 	return new BM25Weight(collectionStats.field(), idf, adl, K);
@@ -110,7 +110,7 @@ public class BM25 extends Similarity {
 	@Override
 	public float score(int doc, float tf)
 	{
-	    return ((k1 + 1) * tf) / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf; 
+	    return ((k1 + 1.0f) * tf) / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf; 
 	}
 
 	@Override
