@@ -16,8 +16,7 @@ import org.apache.lucene.analysis.snowball.SnowballFilter;
 
 public class TrecAnalyzer extends Analyzer {
 
-     String stop = null;
-     String stemmer = null;
+     String       stemmer   = null;
      CharArraySet stopwords = null;
     
      public TrecAnalyzer(String[] opt) {
@@ -43,21 +42,23 @@ public class TrecAnalyzer extends Analyzer {
     
     @Override
     protected TokenStreamComponents createComponents(String fieldName) {
-	 Tokenizer source = new WhitespaceTokenizer();
+	 Tokenizer   source = new WhitespaceTokenizer();
 	 TokenStream filter = new LowerCaseFilter(source); // all the stemmers need lower case tokens
 
 	 if (stopwords != null)
 	      filter = new StopFilter(filter, stopwords);
-	
-	 if (stemmer.equals("porter"))
-	      filter = new PorterStemFilter(filter);
-	 else if (stemmer.equals("krovetz"))
-	      filter = new KStemFilter(filter);
-	 else if (stemmer.equals("snowball"))
-	      filter = new SnowballFilter(filter, "English");
-	 else if (stemmer.equals("sstemmer"))
-	      filter = new EnglishMinimalStemFilter(filter);
 
+	 if (stemmer != null) {
+	     if (stemmer.equals("porter"))
+		 filter = new PorterStemFilter(filter);
+	     else if (stemmer.equals("krovetz"))
+		 filter = new KStemFilter(filter);
+	     else if (stemmer.equals("snowball"))
+		 filter = new SnowballFilter(filter, "English");
+	     else if (stemmer.equals("sstemmer"))
+		 filter = new EnglishMinimalStemFilter(filter);
+	 }
+	 
 	 return new TokenStreamComponents(source, filter);
     }
 }
