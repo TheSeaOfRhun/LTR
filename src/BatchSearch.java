@@ -22,8 +22,8 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.store.FSDirectory;
 
-public class BatchSearch {
-
+public class BatchSearch
+{
     private BatchSearch() {};
 
     public static void main(String[] args)
@@ -78,7 +78,6 @@ public class BatchSearch {
 	    System.exit(0);
 	}
 
-	
 	String pkg = "org.apache.lucene.search.similarities.";
 	Similarity similarity = null;
 
