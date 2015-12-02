@@ -1,5 +1,4 @@
 {
-"tfidf"             :"TFIDFSimilarity",
 "bm25L"             :"BM25Similarity",
 "dfrL"              :"DFRSimilarity",
 "defaultL"          :"DefaultSimilarity",
