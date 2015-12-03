@@ -94,9 +94,9 @@ public class BatchSearch
 	else if (simstr.equals("IBSimilarity")) {
 	    similarity = (Similarity)Class
 		.forName(pkg + simstr)
-		.getConstructor(DistributionSPL.class,
-				LambdaDF.class,
-				NormalizationH2.class)
+		.getConstructor(Distribution.class,
+				Lambda.class,
+				Normalization.class)
 		.newInstance(new DistributionSPL(),
 			     new LambdaDF(),
 			     new NormalizationH2());
