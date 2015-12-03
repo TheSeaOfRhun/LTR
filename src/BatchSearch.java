@@ -91,6 +91,16 @@ public class BatchSearch
 			     new AfterEffectL(),
 			     new NormalizationH2());
 	}
+	else if (simstr.equals("IBSimilarity")) {
+	    similarity = (Similarity)Class
+		.forName(pkg + simstr)
+		.getConstructor(DistributionSPL.class,
+				LambdaDF.class,
+				NormalizationH2.class)
+		.newInstance(new DistributionSPL(),
+			     new LambdaDF(),
+			     new NormalizationH2());
+	}
 	else if (simstr.endsWith("Similarity")) {
 	    similarity = (Similarity)Class
 		.forName(pkg + simstr)
