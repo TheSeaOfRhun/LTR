@@ -22,7 +22,7 @@ java -cp /x/lucene.TREC/lib/*
 java -cp /x/lucene.TREC/lib/*
       BatchSearch -index   /x/index/CD45
                   -queries /x/query/301-350
-                  -simfn   bm25
+                  -simfn   BM25Similarity
                   -stop    /x/misc/ser17
                   -stem    PorterStemFilter
 ```
