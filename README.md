@@ -13,7 +13,7 @@ java -cp /x/lucene.TREC/lib/*
      IndexTREC -index /x/index/CD45
                -docs  /x/doc/CD45
                -stop  /x/misc/ser17
-               -stem  sstemmer
+               -stem  PorterStemFilter
 ```
 
 ###### Retrieval
@@ -24,7 +24,7 @@ java -cp /x/lucene.TREC/lib/*
                   -queries /x/query/301-350
                   -simfn   bm25
                   -stop    /x/misc/ser17
-                  -stem    sstemmer
+                  -stem    PorterStemFilter
 ```
 
 ###### lucene.TREC
@@ -96,4 +96,6 @@ A few points to note, and help clarify meaning:
   <TOP>
   ```
   
-- `sstemmer` tells Lucene to use the *S-Stemmer*.
+- `PorterStemFiler` is a name of a Java class that implements the
+  Porter stemming algoirthm and this string tells Lucene to use that
+  stemmer.
