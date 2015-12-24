@@ -20,11 +20,11 @@ java -cp /x/lucene.TREC/lib/*
 
 ```
 java -cp /x/lucene.TREC/lib/*
-      BatchSearch -index   /x/index/CD45
-                  -queries /x/query/301-350
-                  -simfn   BM25Similarity
-                  -stop    /x/misc/ser17
-                  -stem    PorterStemFilter
+      BatchSearch -index      /x/index/CD45
+                  -queries    /x/query/301-350
+                  -similarity BM25Similarity
+                  -stop       /x/misc/ser17
+                  -stem       PorterStemFilter
 ```
 
 ###### lucene.TREC
