@@ -64,8 +64,8 @@ java -cp /x/lucene.TREC/lib/*
 
 A few points to note, and help clarify meaning:
 
-- Command-line invocations below have been formatted for readability,
-  everything should go in one line.
+- Command-line invocations (shown above) have been formatted for
+  readability, everything should go in one line.
 
 - `/x` is a imaginary, the layout does not have to be this. It is only
   to point out how to point the tool to the data.
