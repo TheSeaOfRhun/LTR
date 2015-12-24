@@ -85,7 +85,7 @@ A few points to note, and help clarify meaning:
   of creating this structure. Otherwise you have to write a program to
   do so. This pre-processing of query files was necessary because the
   older (early 1990's) TREC queries used a different structure, and
-  the interntion is to have backward compatibility.
+  the intention is to have backward compatibility.
 
   ```
   <TOP>
