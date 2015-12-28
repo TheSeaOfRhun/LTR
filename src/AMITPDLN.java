@@ -46,7 +46,7 @@ public class AMITPDLN extends Similarity {
     }
 
     @Override
-    public final SimWeight computeWeight(float queryBoost, CollectionStatistics collectionStats,
+    public final SimWeight computeWeight(CollectionStatistics collectionStats,
 					 TermStatistics... termStats)
     {
 	float N, n, idf, adl, dl;
@@ -138,7 +138,7 @@ public class AMITPDLN extends Similarity {
 	}
 
 	@Override
-	public void normalize(float queryNorm, float topLevelBoost) {}
+	public void normalize(float queryNorm, float boost) {}
     }    
 
     protected byte encodeNorm(int dl)
