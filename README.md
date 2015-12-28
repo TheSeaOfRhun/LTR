@@ -1,4 +1,4 @@
-Here is a set of tools to run Lucene (5.3.1) on TREC collections. To
+Here is a set of tools to run Lucene (5.4.0) on TREC collections. To
 build it run `ant` from inside the `lucene.TREC` directory. The Lucene
 libraries live in `lib`, the classes in `bin` and the tool-set is
 bundled into `lib/lucene.TREC.jar`. The usual way to use it on TREC
