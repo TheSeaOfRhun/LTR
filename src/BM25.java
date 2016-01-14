@@ -19,12 +19,6 @@ public class BM25 extends Similarity
 {
     private static float k1;
     private static float b;
-    private static final float[] NORM = new float[256];    
-    static {
-	for (int i = 0; i < 256; i++) {
-	    NORM[i] = SmallFloat.byte315ToFloat((byte)i);
-	}
-    }
     
     public BM25()
     {
@@ -57,7 +51,7 @@ public class BM25 extends Similarity
     public final SimWeight computeWeight(CollectionStatistics collectionStats,
 					 TermStatistics... termStats)
     {
-	float N, n, idf, adl, dl;
+	float N, n, idf, adl;
 
 	idf = 1.0f;
 	
@@ -76,13 +70,7 @@ public class BM25 extends Similarity
 	
 	adl = collectionStats.sumTotalTermFreq() / N;
 
-	float K[] = new float[256];
-	for (int i = 0; i < K.length; i++) {
-	    dl = decodeNorm((byte)i);
-	    K[i] = k1 * (1.0f - b + b * (dl / adl));
-	}
-
-	return new BM25Weight(collectionStats.field(), idf, adl, K);
+	return new BM25Weight(collectionStats.field(), idf, adl);
     }
 
     @Override
@@ -97,20 +85,25 @@ public class BM25 extends Similarity
     {
 	private final BM25Weight bw;
 	private final NumericDocValues norms;
-	private final float[] K;
+
     
 	BM25Scorer(BM25Weight bw, NumericDocValues norms)
 	    throws IOException
 	{
 	    this.bw    = bw;
-	    this.K     = bw.K;
 	    this.norms = norms;
 	}
 
 	@Override
 	public float score(int doc, float tf)
 	{
-	    return ((k1 + 1.0f) * tf) / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf; 
+	    float idf, dl, adl, K, w;
+	    idf = bw.idf;
+	    adl = bw.adl;
+	    dl  = (float)norms.get(doc);
+	    K   = k1 * (1.0f - b + b * (dl / adl));
+	    w   = ((k1 + 1.0f) * tf) / (K + tf) * idf;
+	    return w;
 	}
 
 	@Override
@@ -131,14 +124,12 @@ public class BM25 extends Similarity
 	private final String field;
 	private final float idf;
 	private final float adl;
-	private final float K[];
 	
-	public BM25Weight(String field, float idf, float adl, float K[])
+	public BM25Weight(String field, float idf, float adl)
 	{
 	    this.field = field;
 	    this.idf   = idf;
 	    this.adl   = adl;
-	    this.K     = K;
 	}
 
 	@Override
@@ -151,20 +142,9 @@ public class BM25 extends Similarity
 	public void normalize(float queryNorm, float boost) {}
     }    
 
-    protected byte encodeNorm(int dl)
-    {
-	return SmallFloat.floatToByte315(dl);
-    }
-
-    protected float decodeNorm(byte b)
-    {
-	return NORM[b & 0xFF];
-    }
-    
     @Override
     public final long computeNorm(FieldInvertState state)
     {
-	final int numterms = state.getLength();
-	return numterms;
+	return state.getLength();
     }
 }
