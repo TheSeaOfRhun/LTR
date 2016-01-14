@@ -18,19 +18,11 @@ import java.util.Collections;
 public class SERSIMPLE extends Similarity {
     private static float k1;
     private static float b;
-
-    private static final float[] NORM = new float[256];    
-    static {
-	for (int i = 0; i < 256; i++) {
-	    NORM[i] = SmallFloat.byte315ToFloat((byte)i);
-	}
-    }
     
     public SERSIMPLE()
     {
 	k1 = 2.0f;
 	b  = 0.75f;
-	    
     }
 
     public float log(double x)
@@ -68,41 +60,38 @@ public class SERSIMPLE extends Similarity {
 	    }
 	}
 	
-	float K[] = new float[256];
-	for (int i = 0; i < K.length; i++) {
-	    dl = decodeNorm((byte)i);
-	    K[i] = k1 * (1- b + b * (dl / adl));
-	}
-
-	return new TFIDFWeight(collectionStats.field(), idf, adl, K);
+	return new TFIDFWeight(collectionStats.field(), idf, adl);
     }
 
     @Override
     public final SimScorer simScorer(SimWeight sw, LeafReaderContext context)
 	throws IOException
     {
-	TFIDFWeight bw = (TFIDFWeight) sw;
-	return new TFIDFScorer(bw, context.reader().getNormValues(bw.field));
+	TFIDFWeight tw = (TFIDFWeight) sw;
+	return new TFIDFScorer(tw, context.reader().getNormValues(tw.field));
     }
 
     public class TFIDFScorer extends SimScorer
     {
-	private final TFIDFWeight bw;
+	private final TFIDFWeight tw;
 	private final NumericDocValues norms;
-	private final float[] K;
     
-	TFIDFScorer(TFIDFWeight bw, NumericDocValues norms)
+	TFIDFScorer(TFIDFWeight tw, NumericDocValues norms)
 	    throws IOException
 	{
-	    this.bw    = bw;
-	    this.K     = bw.K;
+	    this.tw    = tw;
 	    this.norms = norms;
 	}
 
 	@Override
 	public float score(int doc, float tf)
 	{
-	    float w = (k1  * tf) / (K[(byte)norms.get(doc) & 0xFF] + tf) * bw.idf;
+ 	    float idf, dl, adl, K, w;
+	    idf = tw.idf;
+	    adl = tw.adl;
+	    dl  = (float)norms.get(doc);
+	    K   = k1 * (1 - b + b * (dl / adl));
+	    w   = (k1 * tf) / (K + tf) * idf;
 	    return w;
 	}
 
@@ -124,14 +113,12 @@ public class SERSIMPLE extends Similarity {
 	private final String field;
 	private final float idf;
 	private final float adl;
-	private final float K[];
 	
-	public TFIDFWeight(String field, float idf, float adl, float K[])
+	public TFIDFWeight(String field, float idf, float adl)
 	{
 	    this.field = field;
 	    this.idf   = idf;
 	    this.adl   = adl;
-	    this.K     = K;
 	}
 
 	@Override
@@ -144,20 +131,9 @@ public class SERSIMPLE extends Similarity {
 	public void normalize(float queryNorm, float boost) {}
     }    
 
-    protected byte encodeNorm(int dl)
-    {
-	return SmallFloat.floatToByte315(dl);
-    }
-
-    protected float decodeNorm(byte b)
-    {
-	return NORM[b & 0xFF];
-    }
-    
     @Override
     public final long computeNorm(FieldInvertState state)
     {
-	final int numterms = state.getLength();
-	return numterms;
+	return state.getLength();
     }
 }
