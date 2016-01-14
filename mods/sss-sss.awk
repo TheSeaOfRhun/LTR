@@ -62,8 +62,8 @@ BEGIN {
     fmt_pretty = "%2d %s%s%s (%-24s) * (%-30s) / (%-13s)\n"
     fmt_idf    = "idf = %s;"
     fmt_idf1   = "idf += %s;"
-    fmt_ln     = "K[i] = %s;"
-    fmt_w      = "float w = %s / K[(byte)norms.get(doc) \\\& 0xFF] * bw.idf;"
+    fmt_ln     = "K = %s;"
+    fmt_w      = "w = %s / K * idf;"
     
     for (i in TF) {
 	for (j in IDF) {
@@ -88,8 +88,8 @@ BEGIN {
 		    gsub("TMPL", class, l)
 		    gsub("idf = log\\(N\\/n\\);", line_idf, l)
 		    gsub("idf \\+= log\\(N\\/n\\);", line_idf1, l)
-		    gsub("K\\[i\\] = 1\\.0f;", line_ln, l)
-		    gsub("float w = 1\\.0f;", line_w, l)
+		    gsub("K = 1\\.0f;", line_ln, l)
+		    gsub("w = 1\\.0f;", line_w, l)
 		    print l>fo
 		}
 
