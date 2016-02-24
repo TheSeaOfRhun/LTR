@@ -83,6 +83,8 @@ BEGIN {
 
 		fi = i_f1
 		fo = "classes/" class ".java"
+		if (fi ~ /.*[e]\.java/)
+		    fo = "classes/" class "e.java"
 
 		while(getline l<fi) {
 		    gsub("TMPL", class, l)
