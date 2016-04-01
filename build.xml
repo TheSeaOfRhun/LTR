@@ -1,4 +1,4 @@
-<project name="lucene.TREC" basedir="." default="jar">
+<project name="LTR" basedir="." default="jar">
 
     <property name="src"    value="src"/>
     <property name="lib"    value="lib"/>
