@@ -1,8 +1,10 @@
-LTR is a mod of Lucene (5.4.0) for doing Information Retrieval (IR)
-experiments on TREC test-collections. The way to use it on TREC data
-is to pass to `IndexTREC`, at the command-line, a TREC document corpus
-to index, and then retrieve documents with `BatchSearch` and a set of
-queries as input.
+[LTR][ltr] is a mod of Lucene (5.4.0) for doing Information Retrieval
+(IR) experiments on TREC test-collections. The way to use it on TREC
+data is to pass to `IndexTREC`, at the command-line, a TREC document
+corpus to index, and then retrieve documents with `BatchSearch` and a
+set of queries as input.
+
+[Documentation][ltrd]
 
 ###### Build
 
@@ -109,5 +111,7 @@ A few points to note, and help clarify meaning:
   Porter stemming algorithm and this string tells Lucene to use that
   stemmer.
 
+[ltr]:  http://kak.tx0.org/IR/LTR/
+[ltrd]: http://kak.tx0.org/IR/LTR/Doc/
 [trb]:  http://kak.tx0.org/IR/trecbox/
 [trbq]: http://kak.tx0.org/IR/trecbox/Doc/Query-Parser
