@@ -1,12 +1,32 @@
-Here is a set of tools to run Lucene (5.4.0) on TREC
-test-collections. To build Lucene run `ant` from inside the `LTR`
-directory. The Lucene libraries live in `lib`, the classes in `bin`
-and the tool-set is bundled into `lib/LTR.jar`. The usual way to use
-it on TREC test-collections is to pass `IndexTREC`, at the
-command-line, a TREC-like document corpus to index, and then retrieve
-documents with `BatchSearch` and a set of queries as input.
+LTR is a mod of Lucene (5.4.0) for doing Information Retrieval (IR)
+experiments on TREC test-collections. The way to use it on TREC data
+is to pass to `IndexTREC`, at the command-line, a TREC document corpus
+to index, and then retrieve documents with `BatchSearch` and a set of
+queries as input.
 
-###### Indexing
+###### Build
+
+To build Lucene run `ant` from inside the `LTR` directory. The Lucene
+libraries live in `lib`, the classes in `bin` and the tool-set is
+bundled into `lib/LTR.jar`.
+
+```
+/x/LTR
+├── README.md
+├── bin
+├── build.xml
+├── lib
+│   ├── ...
+│   └── LTR.jar
+└── src
+```
+
+```
+cd /x/LTR
+ant
+```
+
+###### Index
 
 ```
 java -cp /x/LTR/lib/*
@@ -16,7 +36,7 @@ java -cp /x/LTR/lib/*
                -stem  PorterStemFilter
 ```
 
-###### Retrieval
+###### Retrieve
 
 ```
 java -cp /x/LTR/lib/*
@@ -27,19 +47,7 @@ java -cp /x/LTR/lib/*
                   -stem       PorterStemFilter
 ```
 
-###### LTR
-
-```
-/x/LTR
-├── README.md
-├── bin
-├── build.xml
-├── lib
-│   └── LTR.jar
-└── src
-```
-
-###### Data; input and output locations.
+###### Location of input and output data
 
 ```
 /x
