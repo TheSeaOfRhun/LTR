@@ -72,7 +72,7 @@ A few points to note, and help clarify meaning:
 
 - `/x/index/CD45.017.s` is an empty directory that was created before
   passing it to `IndexTREC`. The naming is arbitrary, but, if you use
-  [trecbox](https://github.com/sauparna/trecbox) to drive `LTR`, it
+  [trecbox][trb] to drive `LTR`, it
   will have a meaning.
 
 - `/x/misc/ser17` is a plain text file containing a list of stop words,
@@ -83,11 +83,10 @@ A few points to note, and help clarify meaning:
   tag and the text is placed within a <TEXT> tag. It was necessary to
   normalize the formatting because the older (early 1990's) TREC
   queries used a different structure. A snippet of code shows how to
-  use trecbox's (query
-  parser)[http://kak.tx0.org/IR/trecbox/Doc/Query-Parser] to
-  pre-process the TREC query files. The parts of the query like
-  'title', 'description' and 'narrative', if specified, is packed in a
-  single block of text within the <TEXT> tag.
+  use trecbox's [query parser][trbq] to pre-process the TREC query
+  files. The parts of the query like 'title', 'description' and
+  'narrative', if specified, is packed in a single block of text
+  within the <TEXT> tag.
 
   ```
   <TOP>
@@ -101,3 +100,6 @@ A few points to note, and help clarify meaning:
 - `PorterStemFilter` is a name of a Java class that implements the
   Porter stemming algorithm and this string tells Lucene to use that
   stemmer.
+
+[trb]:  http://kak.tx0.org/IR/trecbox/
+[trbq]: http://kak.tx0.org/IR/trecbox/Doc/Query-Parser
