@@ -93,11 +93,7 @@ A few points to note, and help clarify meaning:
   
   It was necessary to normalize the formatting because the older
   (early 1990's) TREC queries used a different structure. A snippet of
-  code shows how to use trecbox's (query
-  parser)[http://kak.tx0.org/IR/trecbox/Doc/Query-Parser] to
-  pre-process the TREC query files. The parts of the query like
-  'title', 'description' and 'narrative', if specified, is packed in a
-  single block of text within the <TEXT> tag.
+  code shows how to use trecbox's (query parser)[http://kak.tx0.org/IR/trecbox/Doc/Query-Parser] to pre-process the TREC query files. The parts of the query like 'title', 'description' and 'narrative', if specified, is packed in a single block of text within the <TEXT> tag.
 
 - `PorterStemFilter` is a name of a Java class that implements the
   Porter stemming algorithm and this string tells Lucene to use that
