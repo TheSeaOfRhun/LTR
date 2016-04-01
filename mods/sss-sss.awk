@@ -1,25 +1,28 @@
 # The program reads a file containing strings that describe how to
-# construct a tf*idf/ln formula and writes out Lucene-5.3.1 Java
+# construct a 'tf * idf / ln' formula and writes out Lucene-5.4.0 Java
 # classes that incorporate that particular weighting formula.
 #
 # USAGE : awk -f sss-sss.awk sss-sss.parts TMPL.java
-# input : The files sss-sss.parts and TMPL.java
-# output: A file sss-sss.formulae, that contain the formulae list for
-#         reference.
-#         The Java classes go into ./classes/*.java
 #
-# TMPL.java acts as a template. The program constructs as a string,
-# the formula and the Java class name, and based on queues in the
-# template places the two strings at the appropriate positions using
-# gsub(). There is no fancy code-generation going on here.
+# INPUT : The files sss-sss.parts and TMPL.java (or TMPLe.java)
 #
-# The one's I don't know how to implement in Luecen-5.3.1 is marked
+# OUTPUT: a) A file sss-sss.formulae, that contain the formulae as list
+#            for reference.
+#         b) The Java class files are placed here ./classes/*.java
+#
+# TMPL.java (and TMPLe.java) acts as a template. The program
+# constructs the formula (a string) and the Java class name, and based
+# on queues in the template, places the two strings at the appropriate
+# positions using gsub(). There is no fancy code-generation going on
+# here.
+#
+# The ones I don't know how to implement in Lucene-5.4.0 is marked as
 # OFF in sss-sss.parts
 #
-# The 'classes' directory needs to be created beforehand.
+# WARN: The 'classes' directory needs to be created beforehand.
 #
-# The Java classes have to be moved to lucene.TREC/src/ and
-# lucene.TREC rebuilt (using 'ant') to make them available at
+# The Java classes have to be moved to LTR/src/ and LTR rebuilt (using
+# 'ant' from inside the LTR directory) to make them available at
 # run-time.
 
 function printa(a) {
