@@ -1,8 +1,8 @@
-[LTR][ltr] is a mod of Lucene (5.4.0) for doing Information Retrieval
-(IR) experiments on TREC test-collections. The way to use it on TREC
-data is to pass to `IndexTREC`, at the command-line, a TREC document
-corpus to index, and then retrieve documents with `BatchSearch` and a
-set of queries as input.
+*LTR* is a mod of Lucene (5.4.0) for doing Information Retrieval (IR)
+experiments on TREC test-collections. The way to use it on TREC data
+is to pass to `IndexTREC`, at the command-line, a TREC document corpus
+to index, and then retrieve documents with `BatchSearch` and a set of
+queries as input.
 
 [Documentation][ltrd]
 
