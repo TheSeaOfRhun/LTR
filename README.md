@@ -90,11 +90,8 @@ A few points to note, and help clarify meaning:
   queries. Each query is enclosed in a <TOP> tag and the text is
   placed within a <TEXT> tag. It was necessary to normalize the
   formatting because the older (early 1990's) TREC queries used a
-  different structure. A snippet of code shows how to use trecbox's
-  [query parser][trbq] to pre-process the TREC query files. The parts
-  of the query like 'title', 'description' and 'narrative', if
-  specified, is packed in a single block of text within the <TEXT>
-  tag.
+  different structure. A [snippet of code][trbq] shows how to use
+  _trecbox's_ query parser to convert them to this format.
 
   ```
   <TOP>
