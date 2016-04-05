@@ -49,7 +49,7 @@ java -cp /x/LTR/lib/*
                   -stem       PorterStemFilter
 ```
 
-###### Location of input and output data
+###### Locations
 
 ```
 /x
