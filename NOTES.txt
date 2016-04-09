@@ -1,0 +1,392 @@
+NOTES ON LUCENE-5.4.0
+
+Rup Palchowdhury
+rup.palchowdhury [at] gmail [dot] com
+
+----------------------------------------------------------------------
+TABLE OF CONTENTS
+
+A. STEMMERS
+
+B. MODELS
+
+C. MODIFYING MODELS
+
+    1. STARTING WITH A TEMPLATE: TMPL.java
+    
+    2. TF
+    
+    3. IDF
+    
+    4. K
+
+E. PARSING & INDEXING A CORPUS
+
+    1. CODE: IndexTREC
+    
+    2. CODE: TrecAnalyzer
+
+F. RETRIEVAL
+
+    1.  CODE: BatchSearch
+
+G. FAQ
+
+----------------------------------------------------------------------
+A. STEMMERS
+
+Here is a handful of stemmer implementations in Lucene, in brackets
+are names they are commonly known by:
+
+	PorterStemFilter
+	KStemFilter (Krovetz stemmer)
+	SnowballFilter
+	EnglishMinimalStemFilter (S-Stemmer)
+
+See: https://lucene.apache.org/core/5_4_0/analyzers-common/org/apache/lucene/analysis/en/package-summary.html
+
+
+----------------------------------------------------------------------
+B. MODELS
+
+A full list of models available in Lucene-5.4.0 is in the package
+org.apache.lucene.search.similaritie:
+
+https://lucene.apache.org/core/5_4_0/core/org/apache/lucene/search/similarities/package-summary.html
+
+----------------------------------------------------------------------
+C. MODIFYING MODELS
+
+The starting point was Lucene's BM25Similarity.java, which was
+stripped to its bare minimum and transformed into TMPL.java. Here I
+describe how to craft TMPL.java to implement your own TF-IDF scoring
+formula.
+
+BM25Similarity.java:
+
+https://lucene.apache.org/core/5_4_0/core/org/apache/lucene/search/similarities/BM25Similarity.html
+
+----------------------------------------------------------------------
+C.1. STARTING WITH A TEMPLATE: TMPL.java
+
+There has been an attempt on the page on 'Lucene scoring' to
+specify the arithmetic involved in computing the similarity code,
+color-coding parts of the arithmetic formula, and then mentioning the
+methods from the Java class that do the job of each part of the
+formula using the same color code.
+
+https://lucene.apache.org/core/5_4_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html
+
+Much of the surrounding text describing everything on that page
+possibly assumes a lot of context which most readers will be unaware
+of. So here I will use TMPL.java to explain only the parts of the code
+that is implementing a formula of the form:
+
+TF * IDF / LN
+
+where LN is the length-normalization factor.
+
+A shallow cut-away of this formula would involve K in this way;
+
+TF * IDF / (K + TF)
+
+The following sections explain where and how the three pieces, TF, IDF
+and K are computed. The rest of the code is better left
+untouched. Most of the functions have been rigged to return 1 so that
+the chain-multiplication does not affect the score computation.
+
+----------------------------------------------------------------------
+C.2. TF
+
+The term-frequency value is available to the object and need not be
+constructed out of anything. The method TFIDFScorer.score() receives
+the value in the variable 'tf' and is used to compute the weight 'w'
+as shown:
+
+public class TFIDFScorer extends SimScorer
+{
+
+    ...
+
+    public float score(int doc, float tf)
+    {
+        float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
+    	return w;
+    }
+
+    ...
+}
+
+----------------------------------------------------------------------
+C.3. IDF
+
+'N' and 'n', the ingredients of IDF, are initialized in here and 'idf'
+computed. There are bells-n-whistles, where 'idf' is accumulated as s
+series-sum, which is possibly because of Lucene's view of queries and
+documents as having been partitioned into 'fields' which necessitates
+a sum over the fields. My interpretation is that, control does not
+step into the 'else' block and even if it does, the sum is safe.
+
+public final SimWeight computeWeight(float queryBoost, CollectionStatistics collectionStats, TermStatistics... termStats)
+{
+    float N, n, idf, adl, dl;
+    
+    idf = 1.0f;
+    N   = collectionStats.maxDoc();
+    adl = collectionStats.sumTotalTermFreq() / N;
+	
+    if (termStats.length == 1) {
+        n = termStats[0].docFreq();
+	idf = log(N/n);
+    }
+    else {
+        for (final TermStatistics stat : termStats) {
+	n = stat.docFreq();
+	idf += log(N/n);
+       }
+    }
+	
+    float K[] = new float[256];
+    for (int i = 0; i < K.length; i++) {
+        dl = decodeNorm((byte)i);
+	K[i] = 1.0f;
+    }
+
+    return new TFIDFWeight(collectionStats.field(), idf, adl, K);
+}
+
+----------------------------------------------------------------------
+C.4. K
+
+NOTE: There is another version of TMPL.java, names TMPLe.java that
+involves the bits of code that encodes K values. The discussion on
+encoding K, that follows, should be read along with TMPLe.java.
+
+If you have noticed, the computations of K takes place in
+computeWeight() too, right after IDF. Mathematically K is some
+function of 'dl' and 'adl', and for this exposition we represent this
+computation as:
+
+K = f(dl, adl)
+
+It so happens that Lucene stows away the 'dl' for each document at a
+point in time that is before score computations have taken place and
+encodes these integers in a single byte; which of course is lossy and
+is done for reasons of efficiency. Since 'dl' is a byte, it has only
+256 possible values and so does f(dl, adl). K is implemented as a
+256-element array, each of whose elements is a floating-point number;
+all the possible values of f(dl, adl). Later K is used as a look-up
+table.
+
+encodeNorm() is used elsewhere to pack 'dl' into a byte. In
+TFIDFScorer.score(), norms.get(doc) retrieves that byte, 'dl', for a
+particular doc. decodeNorm() unpacks that byte to a float using
+another look-up table NORM[], which was populated with floating-point
+representation of the 256 possible bytes. The unpacked byte, in the
+form of a float, is then used to compute f(dl, adl) and stored in
+K[i]. Later when the normalization factor K is needed, the array K is
+indexed by typecasting the byte value, 'dl', returned by norms.get(doc).
+
+The pieces of code involved in this follow with bits of commentary:
+
+Populate NORM with 256 possible values and implement the packing and
+unpacking technique of your choice, making sure they are inverse
+operations of each other;
+
+private static final float[] NORM = new float[256];
+static {
+   for (int i = 0; i < 256; i++) {
+   NORM[i] = SmallFloat.byte315ToFloat((byte)i);
+  }
+}
+
+...
+
+protected float decodeNorm(byte b)
+{
+    return NORM[b & 0xFF];
+}
+
+...
+
+protected byte encodeNorm(int dl)
+{
+    return SmallFloat.floatToByte315(dl);
+}
+
+Compute the 256 possible values of 'K' by generating the 256 possible
+values of 'dl';
+
+float K[] = new float[256];
+for (int i = 0; i < K.length; i++) {
+    dl = decodeNorm((byte)i);
+    K[i] = log(dl / adl);
+}
+
+Pick the particular value of K corresponding to a byte returned by
+norms.get(). 'norms' is of type NumericDocValues which encapsulates a
+per-document numeric value. This is also a point where the weight is
+computed; score() is self-explanatory.
+
+public class TFIDFScorer extends SimScorer
+{
+    private final TFIDFWeight bw;
+    private final NumericDocValues norms;
+    private final float[] K;
+    
+    TFIDFScorer(TFIDFWeight bw, NumericDocValues norms)
+    throws IOException
+    {
+        this.bw    = bw;
+	this.K     = bw.K;
+	this.norms = norms;
+    }
+    
+    public float score(int doc, float tf)
+    {
+        float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
+	return w;
+    }
+    
+...
+}
+
+----------------------------------------------------------------------
+D. PARSING & INDEXING A CORPUS
+
+java -cp LTR/lib/* IndexTREC -index [w]
+     	 	   	     -docs  [x]
+			     -stop  [y]
+			     -stem  [z]
+
+[w] - Directory where the index will be placed.
+[x] - Directory containing the document corpus.
+[y] - A file containing the stop words.
+[z] - The class that implements a particular stemming algorithm.
+
+----------------------------------------------------------------------
+D.1 CODE: IndexTREC
+
+https://github.com/sauparna/LTR/blob/master/src/IndexTREC.java
+
+Here is a rundown on modifying Lucene's indexing structures to process
+TREC data. Everything happens with this block of code in main(), after
+command-line arguments have been parsed and starting points
+determined:
+
+...
+Directory dir         = FSDirectory.open(Paths.get(indexPath));
+TrecAnalyzer analyzer = new TrecAnalyzer(opt);
+IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+iwc.setOpenMode(OpenMode.CREATE);
+IndexWriter writer    = new IndexWriter(dir, iwc);
+indexDocs(writer, docDir);
+writer.close();
+...
+
+Functionality for parsing the corpus is implemented in these
+functions:
+
+public static class DocVisitor extends SimpleFileVisitor<Path>
+static void parseDoc(IndexWriter writer, Path file)
+static void indexDocs(final IndexWriter writer, Path path)
+
+A parser, parseDoc() is plugged into
+DocVisitor.visitFile(). parseDoc() uses the Jsoup library to parse the
+mark-up (XML-like) in TREC documents and pick all the content between
+any tag that may exist within a <DOC> tag (which is a unit of TREC
+document), except the contents of the <DOCNO> tag, which it passes on
+to Lucene to be used as unique identifiers for the
+documents. indexDocs() uses a DocVisitor object to walk a directory
+tree and gobble up files. From the programmer's point of view, the
+parser is the only bit of engineering that she is able to do, and the
+rest of the work is wiring loose ends and plugging open ports. The
+block of code in main(), is a series of transformations up to the
+point of leaving it to indexDocs() which sets the ball rolling:
+
+indexDocs(IndexWriter(Directory, IndexWriterConfig(TrecAnalyzer(stop, stem))))
+
+----------------------------------------------------------------------
+D.2 CODE: TrecAnalyzer
+
+https://github.com/sauparna/LTR/blob/master/src/TrecAnalyzer.java
+
+The constructor reads a list of stop words into memory and stows away
+the name of the stemmer object. Then in TokenStreamComponents the
+term-processing pipeline is set up, as before, in a series of
+transformations:
+
+TokenStreamComponents(StemmerX(StopFilter(LowerCaseFilter(WhitespaceTokenizer()))))
+
+This is a conceptual view, where I have quoted the actual object name
+from the code (except StemmerX which is meant to be one of several
+stemmer object from Lucene's libraries chosen at run-time using
+reflection), and is not syntactically correct. Nonetheless it sketches
+the idea.
+
+----------------------------------------------------------------------
+E. RETRIEVAL
+
+java -cp LTR/lib/* BatchSearch -index      [v]
+     	 	   	       -queries    [w]
+			       -similarity [x]
+			       -stop       [y]
+			       -stem       [z]
+
+[v] - Path to the directory that contains the index.
+[w] - The file containing TREC queries.
+[x] - The class name of Lucene's similarity model.
+[y] - A file containing the stop words.
+[z] - The class that implements a particular stemming algorithm.
+
+----------------------------------------------------------------------
+E.1 CODE: BatchSearch
+
+https://github.com/sauparna/LTR/blob/master/src/BatchSearch.java
+
+An implementation of search (retrieval) using a set of TREC
+queries. Its interface is not unlike IndexTREC in that command-line
+arguments are parsed to determine the starting points and the block of
+code in main() does everything. Again, other than parsing a TREC
+query, and printing search results in TREC format (TREC runs), most of
+the work involves tying loose ends.
+
+...
+IndexReader reader       = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+IndexSearcher searcher   = new IndexSearcher(reader);
+searcher.setSimilarity(similarity);
+TrecAnalyzer analyzer    = new TrecAnalyzer(opt);
+SimpleQueryParser parser = new SimpleQueryParser(analyzer, field);
+
+org.jsoup.nodes.Document soup;
+String str, qid, txt;
+
+str  = FileUtils.readFileToString(new File(queries));
+soup = Jsoup.parse(str);
+
+for (Element elm : soup.select("TOP")) {
+    qid = elm.child(0).text().trim();
+    txt = elm.child(1).text();
+    Query query = parser.parse(txt);
+    doBatchSearch(searcher, qid, query, simstr, NUMRET);
+}
+
+reader.close();
+...
+
+The view of it as a series of transformations, in sketchy pseudocode
+looks like this:
+
+i = IndexSearcher(IndexReader(DirectoryReader(index)))
+i.setSimilarity(SimilarityX)
+q = SimpleQueryParser(TrecAnalyzer(stop, stem)).parse()
+
+doBatchSearch(i, q)
+{
+    result = i.search(q, M)
+    prettyprint(result)
+}
+
+SimilarityX is the name of the similarity class chosen at run-time
+using reflection. M is the number of documents to retrieve which is
+also the length of the search result (or run file).
