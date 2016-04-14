@@ -49,6 +49,28 @@ See: https://lucene.apache.org/core/5_4_0/analyzers-common/org/apache/lucene/ana
 ----------------------------------------------------------------------
 B. MODELS
 
+The models in LTR are to in the 'models' file. The first column are
+names LTR uses to identify the actual Java classes. Since these
+strings show up in the run tag, it was necessary to map them to
+shorter strings.
+
+    bm25L        BM25Similarity
+    dfrL         DFRSimilarity
+    defaultL     DefaultSimilarity
+    lmdirichletL LMDirichletSimilarity
+    ibL          IBSimilarity
+    tmpl         TMPL
+    bm25         BM25
+    tmple        TMPLe
+    bm25e        BM25e
+
+bm25L is Lucene's stock implementation, while bm25 is a shorter
+cleaner version. Those names with the suffix 'e' point to a version
+that preserves Lucene's technique of packing (encoding) floating point
+document length values into a byte. Diff of TMPL.java and TMPLe.java
+to see what I mean. The next section on modifying models explains it
+in detail.
+
 A full list of models available in Lucene-5.4.0 is in the package
 org.apache.lucene.search.similaritie:
 
