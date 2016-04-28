@@ -1,0 +1,9 @@
+bm25L        BM25Similarity
+dfrL         DFRSimilarity
+defaultL     DefaultSimilarity
+lmdirichletL LMDirichletSimilarity
+ibL          IBSimilarity
+tmpl         TMPL
+bm25         BM25
+tmple        TMPLe
+bm25e        BM25e
