@@ -217,9 +217,9 @@ operations of each other;
 
 private static final float[] NORM = new float[256];
 static {
-   for (int i = 0; i < 256; i++) {
-   NORM[i] = SmallFloat.byte315ToFloat((byte)i);
-  }
+    for (int i = 0; i < 256; i++) {
+        NORM[i] = SmallFloat.byte315ToFloat((byte)i);
+    }
 }
 
 ...
@@ -260,14 +260,14 @@ public class TFIDFScorer extends SimScorer
     throws IOException
     {
         this.bw    = bw;
-    this.K     = bw.K;
-    this.norms = norms;
+        this.K     = bw.K;
+        this.norms = norms;
     }
     
     public float score(int doc, float tf)
     {
         float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
-    return w;
+        return w;
     }
     
 ...
