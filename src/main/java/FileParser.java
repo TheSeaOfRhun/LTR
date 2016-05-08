@@ -4,18 +4,27 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.util.zip.GZIPInputStream;
+import java.util.Iterator;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 
+// For classic TREC format processing.
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+
+// For WARC processing.
+import org.jwat.warc.WarcRecord;
+import org.jwat.warc.WarcReader;
+import org.jwat.warc.WarcReaderFactory;
+import org.jwat.common.HeaderLine;
 
 /**
  * Handles parsing various TREC document formats. Currently supported formats
@@ -64,30 +73,37 @@ public class FileParser {
     throws IOException {
         String extension = FilenameUtils.getExtension(file.getName());
         InputStream inputStream = FileUtils.openInputStream(file);
+        boolean removePrevExtension = false;
 
         // Check for compression extensions.
         switch(extension){
             case "gz":
             case "gzip":
+                // Handle gzip files.
                 inputStream = new GZIPInputStream(inputStream);
-                extension = FilenameUtils.getExtension(
-                    removeExtension(file.getName(), extension));
+                removePrevExtension = true;
                 break;
             case "bzip2":
             case "bz2":
-                // Handle gzip files...
+                // Handle bzip2 files...
                 inputStream = new BZip2CompressorInputStream(inputStream);
-                extension = FilenameUtils.getExtension(
-                    removeExtension(file.getName(), extension));
+                removePrevExtension = true;
                 break;
-         }
+        }
 
-         // Check
-         switch(extension){
+        // Get rid of any compression extensions and get the next extension.
+        if(removePrevExtension)
+            extension = FilenameUtils.getExtension(
+                removeExtension(file.getName(), "."+extension));
+
+        // Check
+        switch(extension){
             case "warc":
+                System.err.println("Found WARC document!");
                 parseWARCFile(writer, inputStream);
                 break;
             default:
+                System.err.println("Found TREC document!");
                 parseTRECFile(writer, inputStream);
         } 
 
@@ -119,13 +135,44 @@ public class FileParser {
 
     /**
      * Parses a WARC formatted file and adds each document to the given index.
+     * This code is loosely based on lemur.nopol.ResponseIterator
+     * (see https://github.com/lemurproject/nopol).
      *
      * @param writer The index to write the document to.
      * @param input  The input stream to parse.
      */
     public static void parseWARCFile(IndexWriter writer, InputStream input) 
     throws IOException {
-       
+        // WarcReader will iterate through each WARC document in the given
+        // input stream in a streaming fashion, so we don't have to worry
+        // about loading the whole thing in memory at once.
+        WarcReader warcReader = WarcReaderFactory.getReader(input);
+        Iterator<WarcRecord> records = warcReader.iterator();
+        WarcRecord record;
+        HeaderLine typeHeader, trecIDHeader;
+        Document doc;
+
+        while(records.hasNext()){
+            record = records.next();
+            typeHeader = record.getHeader("WARC-TYPE");
+            trecIDHeader = record.getHeader("WARC-TREC-ID");
+
+            // Skip non-response entries or entries without headers.
+            if(typeHeader == null || !typeHeader.value.equals("response"))
+                continue;
+
+            // Skip entries that do not have a "WARC-TREC-ID" field in the
+            // header.
+            if(trecIDHeader == null)
+                continue;
+
+            doc = new Document();
+            doc.add(new StringField("docno", trecIDHeader.value, 
+                Field.Store.YES));
+            doc.add(new TextField("contents", IOUtils.toString(
+                    record.getPayloadContent(), (String) null), Field.Store.NO));
+            writer.addDocument(doc);
+        }
     }
 
 }
