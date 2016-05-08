@@ -39,12 +39,32 @@
       <version>1.8.3</version>
     </dependency>
 
-    <!-- Other utils. -->
+    <!-- IO utils. -->
     <dependency>
       <groupId>org.lucee</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.4.0</version>
     </dependency>
+
+    <!-- bzip2 -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.11</version>
+    </dependency>
+
+    <!-- WARC parsing. -->
+    <dependency>
+      <groupId>org.jwat</groupId>
+      <artifactId>jwat-warc</artifactId>
+      <version>1.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jwat</groupId>
+      <artifactId>jwat-common</artifactId>
+      <version>1.0.4</version>
+    </dependency>
+
   </dependencies>
 
 
