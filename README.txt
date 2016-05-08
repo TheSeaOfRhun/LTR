@@ -17,15 +17,15 @@ from: http://kak.tx0.org/IR/
 ----------------------------------------------------------------------
 COMPILING
 
-Type "ant" in a shell.
+Type "mvn package" in a shell. Tested with Maven 3.0.5.
 
 ----------------------------------------------------------------------
 INDEXING
 
-java -cp LTR/lib/* IndexTREC -index AP
-               	   	     -docs  ap/AP
-			     -stop  ap/ser17.txt
-			     -stem  PorterStemFilter
+java -cp "/x/LTR/lib/*" IndexTREC -index AP              \
+                                  -docs  ap/AP           \
+                                  -stop  ap/ser17.txt    \
+                                  -stem  PorterStemFilter
 
 AP - The string passed as -index is a directory where Lucene will
 write the index.
@@ -38,11 +38,11 @@ corpus in.
 ----------------------------------------------------------------------
 RETRIEVAL
 
-java -cp /x/LTR/lib/* BatchSearch -index      AP
-                      		  -queries    ap/query-l.txt
-				  -similarity BM25Similarity
-				  -stop       ap/ser17.txt
-				  -stem       PorterStemFilter
+java -cp "/x/LTR/lib/*" BatchSearch -index      AP              \
+                                    -queries    ap/query-l.txt  \
+                                    -similarity BM25Similarity  \
+                                    -stop       ap/ser17.txt    \
+                                    -stem       PorterStemFilter
 
 ap/query-l.txt - A plain text file containing formatted TREC
 queries. Each query is enclosed in a <TOP> tag and the text is placed

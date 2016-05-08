@@ -38,10 +38,10 @@ A. STEMMERS
 Here is a handful of stemmer implementations in Lucene, in brackets
 are names they are commonly known by:
 
-	PorterStemFilter
-	KStemFilter (Krovetz stemmer)
-	SnowballFilter
-	EnglishMinimalStemFilter (S-Stemmer)
+    PorterStemFilter
+    KStemFilter (Krovetz stemmer)
+    SnowballFilter
+    EnglishMinimalStemFilter (S-Stemmer)
 
 See: https://lucene.apache.org/core/5_4_0/analyzers-common/org/apache/lucene/analysis/en/package-summary.html
 
@@ -133,7 +133,7 @@ public class TFIDFScorer extends SimScorer
     public float score(int doc, float tf)
     {
         float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
-    	return w;
+        return w;
     }
 
     ...
@@ -156,22 +156,22 @@ public final SimWeight computeWeight(float queryBoost, CollectionStatistics coll
     idf = 1.0f;
     N   = collectionStats.maxDoc();
     adl = collectionStats.sumTotalTermFreq() / N;
-	
+    
     if (termStats.length == 1) {
         n = termStats[0].docFreq();
-	idf = log(N/n);
+    idf = log(N/n);
     }
     else {
         for (final TermStatistics stat : termStats) {
-	n = stat.docFreq();
-	idf += log(N/n);
+    n = stat.docFreq();
+    idf += log(N/n);
        }
     }
-	
+    
     float K[] = new float[256];
     for (int i = 0; i < K.length; i++) {
         dl = decodeNorm((byte)i);
-	K[i] = 1.0f;
+    K[i] = 1.0f;
     }
 
     return new TFIDFWeight(collectionStats.field(), idf, adl, K);
@@ -217,9 +217,9 @@ operations of each other;
 
 private static final float[] NORM = new float[256];
 static {
-   for (int i = 0; i < 256; i++) {
-   NORM[i] = SmallFloat.byte315ToFloat((byte)i);
-  }
+    for (int i = 0; i < 256; i++) {
+        NORM[i] = SmallFloat.byte315ToFloat((byte)i);
+    }
 }
 
 ...
@@ -260,14 +260,14 @@ public class TFIDFScorer extends SimScorer
     throws IOException
     {
         this.bw    = bw;
-	this.K     = bw.K;
-	this.norms = norms;
+        this.K     = bw.K;
+        this.norms = norms;
     }
     
     public float score(int doc, float tf)
     {
         float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
-	return w;
+        return w;
     }
     
 ...
@@ -276,10 +276,10 @@ public class TFIDFScorer extends SimScorer
 ----------------------------------------------------------------------
 D. PARSING & INDEXING A CORPUS
 
-java -cp LTR/lib/* IndexTREC -index [w]
-     	 	   	     -docs  [x]
-			     -stop  [y]
-			     -stem  [z]
+java -cp "LTR/lib/*" IndexTREC -index [w]
+                               -docs  [x]
+                               -stop  [y]
+                               -stem  [z]
 
 [w] - Directory where the index will be placed.
 [x] - Directory containing the document corpus.
@@ -349,11 +349,11 @@ the idea.
 ----------------------------------------------------------------------
 E. RETRIEVAL
 
-java -cp LTR/lib/* BatchSearch -index      [v]
-     	 	   	       -queries    [w]
-			       -similarity [x]
-			       -stop       [y]
-			       -stem       [z]
+java -cp "LTR/lib/*" BatchSearch -index      [v]
+                                 -queries    [w]
+                                 -similarity [x]
+                                 -stop       [y]
+                                 -stem       [z]
 
 [v] - Path to the directory that contains the index.
 [w] - The file containing TREC queries.
