@@ -19,65 +19,66 @@ public class TrecAnalyzer extends Analyzer
     String       stemmer   = null;
     CharArraySet stopwords = null;
     
-    public TrecAnalyzer(String[] opt)
+    public TrecAnalyzer(LTRSettings settings)
     {
-	super();
+        super();
 
-	if (!opt[0].equals("None")) {
-	    try {
-		Scanner s = new Scanner(new File(opt[0]));
-		ArrayList<String> list = new ArrayList<String>();
-		while (s.hasNext())
-		    list.add(s.next());
-		s.close();
-		stopwords = StopFilter.makeStopSet(list);
-	    } catch (IOException e) {
-		System.out.println(" caught a " + e.getClass() + 
-				   "\n with message: " + e.getMessage());
-	    }
-	}
-	    
-	if (!opt[1].equals("None"))
-	    stemmer = opt[1];
+        if (settings.stopFile.equals("None")) {
+            try {
+                Scanner s = new Scanner(new File(settings.stopFile));
+                ArrayList<String> list = new ArrayList<String>();
+                while (s.hasNext())
+                    list.add(s.next());
+                s.close();
+                stopwords = StopFilter.makeStopSet(list);
+            } catch (IOException e) {
+                System.out.println(" caught a " + e.getClass() + 
+                                   "\n with message: " + e.getMessage());
+            }
+        }
+            
+        if (!settings.stemmer.equals("None"))
+            stemmer = settings.stemmer;
     }
     
     @Override
     protected TokenStreamComponents createComponents(String fieldName)
     {
-	Tokenizer   source = new WhitespaceTokenizer();
-	TokenStream filter = new LowerCaseFilter(source); // all the stemmers need lower case tokens
-	String      pkg    = "org.apache.lucene.analysis.en.";
-	 
-	if (stopwords != null)
-	    filter = new StopFilter(filter, stopwords);
+        Tokenizer   source = new WhitespaceTokenizer();
+        TokenStream filter = new LowerCaseFilter(source); 
+        // all the stemmers need lower case tokens
+        String      pkg    = "org.apache.lucene.analysis.en.";
+         
+        if (stopwords != null)
+            filter = new StopFilter(filter, stopwords);
 
-	if (stemmer != null) {
-	    try {
-		if (stemmer.equals("SnowballFilter")) {
-		    filter = (TokenStream)Class
-			.forName(pkg + stemmer)
-			.getConstructor(TokenStream.class, String.class)
-			.newInstance(filter, "English");
-		}
-		else {
-		    filter = (TokenStream)Class
-			.forName(pkg + stemmer)
-			.getConstructor(TokenStream.class)
-			.newInstance(filter);
-		}
-	    } catch (InstantiationException e) {
-		e.printStackTrace();
-	    } catch (InvocationTargetException e) {
-		e.printStackTrace();
-	    } catch (NoSuchMethodException e) {
-		e.printStackTrace();
-	    } catch (ClassNotFoundException e) {
-		e.printStackTrace();
-	    } catch (IllegalAccessException e) {
-		e.printStackTrace();
-	    }
-	}
+        if (stemmer != null) {
+            try {
+                if (stemmer.equals("SnowballFilter")) {
+                    filter = (TokenStream)Class
+                        .forName(pkg + stemmer)
+                        .getConstructor(TokenStream.class, String.class)
+                        .newInstance(filter, "English");
+                }
+                else {
+                    filter = (TokenStream)Class
+                        .forName(pkg + stemmer)
+                        .getConstructor(TokenStream.class)
+                        .newInstance(filter);
+                }
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
 
-	return new TokenStreamComponents(source, filter);
+        return new TokenStreamComponents(source, filter);
     }
 }
