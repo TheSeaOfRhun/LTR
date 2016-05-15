@@ -65,11 +65,14 @@ public class FileParser {
      *      - .warc: WARC
      *      - anything else: TREC
      *
+     * @param settings The global settings (used by some parsers to determine
+     *                 fields to index, etc.)
      * @param writer The index to write extracted documents to.
      * @param file The file to process.
      * @param extension The extension of the file.
      */
-    public static void processFile(IndexWriter writer, File file)
+    public static void processFile(LTRSettings settings, IndexWriter writer, 
+        File file)
     throws IOException {
         String extension = FilenameUtils.getExtension(file.getName());
         InputStream inputStream = FileUtils.openInputStream(file);
@@ -100,11 +103,11 @@ public class FileParser {
         switch(extension){
             case "warc":
                 System.err.println("Found WARC document!");
-                parseWARCFile(writer, inputStream);
+                parseWARCFile(settings, writer, inputStream);
                 break;
             default:
                 System.err.println("Found TREC document!");
-                parseTRECFile(writer, inputStream);
+                parseTRECFile(settings, writer, inputStream);
         } 
 
         inputStream.close();
@@ -115,10 +118,12 @@ public class FileParser {
      * Parses a TREC styled file (with &lt;DOC&gt; tags) and adds each document
      * to the given index.
      *
+     * @param settings The global settings.
      * @param writer The index to write the document to.
      * @param input  The input stream to parse.
      */
-    public static void parseTRECFile(IndexWriter writer, InputStream input) 
+    public static void parseTRECFile(LTRSettings settings, IndexWriter writer,
+        InputStream input) 
     throws IOException {
         org.jsoup.nodes.Document soup;
         String docno, txt;        
@@ -136,12 +141,21 @@ public class FileParser {
     /**
      * Parses a WARC formatted file and adds each document to the given index.
      * This code is loosely based on lemur.nopol.ResponseIterator
-     * (see https://github.com/lemurproject/nopol).
+     * (see https://github.com/lemurproject/nopol). The following settings
+     * may be set in the LTRSettings instance passed in:
      *
+     *  warcFieldsToIndex -- a list of field names.
+     *  includeSnippets   -- if true, then all fields will be stored in addition
+     *                       to being indexed; if false, only the docno field
+     *                       is stored.
+     *
+     * @param settings The global settings. This includes what fields should
+     *                 be indexed and stored.
      * @param writer The index to write the document to.
      * @param input  The input stream to parse.
      */
-    public static void parseWARCFile(IndexWriter writer, InputStream input) 
+    public static void parseWARCFile(LTRSettings settings, IndexWriter writer, 
+        InputStream input) 
     throws IOException {
         // WarcReader will iterate through each WARC document in the given
         // input stream in a streaming fashion, so we don't have to worry
@@ -151,7 +165,13 @@ public class FileParser {
         WarcRecord record;
         HeaderLine typeHeader, trecIDHeader;
         Document doc;
+        Field.Store storeField = Field.Store.NO;
+        org.jsoup.nodes.Document soup;
 
+        // Determine whether non-id fields should be stored.
+        if(settings.storeFields)
+            storeField = Field.Store.YES;
+        
         while(records.hasNext()){
             record = records.next();
             typeHeader = record.getHeader("WARC-TYPE");
@@ -169,8 +189,17 @@ public class FileParser {
             doc = new Document();
             doc.add(new StringField("docno", trecIDHeader.value, 
                 Field.Store.YES));
-            doc.add(new TextField("contents", IOUtils.toString(
-                    record.getPayloadContent(), (String) null), Field.Store.NO));
+
+            // Process the document content. This allows us to extract fields
+            // and get rid of things like JavaScript.
+            soup = Jsoup.parse(IOUtils.toString(
+                record.getPayloadContent(), (String) null));
+
+            // Get all of the requested fields.
+            for(String field : settings.warcFieldsToIndex)
+                for(Element elm : soup.getElementsByTag(field))
+                    doc.add(new TextField(field, elm.text(), storeField));
+
             writer.addDocument(doc);
         }
     }

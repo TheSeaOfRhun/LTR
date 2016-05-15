@@ -23,7 +23,7 @@ public class TrecAnalyzer extends Analyzer
     {
         super();
 
-        if (settings.stopFile.equals("None")) {
+        if (!settings.stopFile.equals("None")) {
             try {
                 Scanner s = new Scanner(new File(settings.stopFile));
                 ArrayList<String> list = new ArrayList<String>();

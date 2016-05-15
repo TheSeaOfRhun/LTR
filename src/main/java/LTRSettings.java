@@ -12,6 +12,7 @@ import java.io.IOException;
  */
 public class LTRSettings {
     public static final int     DEFAULT_RESULT_COUNT     = 1000;
+    public static final boolean DEFAULT_STORE_FIELDS     = false;
     public static final boolean DEFAULT_INCLUDE_SNIPPETS = false;
     public static final String  DEFAULT_INDEX_PATH       = "index";
     public static final String  DEFAULT_DOCS_PATH        = null;
@@ -20,6 +21,7 @@ public class LTRSettings {
 
     public int returnedResultCount;
     public ArrayList<String> warcFieldsToIndex;
+    public boolean storeFields;
     public boolean includeSnippets;
     public String   indexPath;
     public String   docsPath;
@@ -52,6 +54,7 @@ public class LTRSettings {
         returnedResultCount = DEFAULT_RESULT_COUNT;
         warcFieldsToIndex = new ArrayList<String>();
         includeSnippets = DEFAULT_INCLUDE_SNIPPETS;
+        storeFields = DEFAULT_STORE_FIELDS;
     }
 
     //@override

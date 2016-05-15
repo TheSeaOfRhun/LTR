@@ -110,7 +110,7 @@ public class IndexTREC {
             iwc.setOpenMode(OpenMode.CREATE);
             // iwc.setRAMBufferSizeMB(256.0);
             IndexWriter writer = new IndexWriter(dir, iwc);
-            indexDocs(writer, docDir);
+            indexDocs(ltrSettings, writer, docDir);
             // writer.forceMerge(1);
             writer.close();
         } catch (IOException e) {
@@ -123,14 +123,18 @@ public class IndexTREC {
     
     public static class DocVisitor extends SimpleFileVisitor<Path> {
         IndexWriter writer;
-        DocVisitor(IndexWriter writer_) {
-            writer = writer_;
+        LTRSettings ltrSettings;
+
+        DocVisitor(LTRSettings ltrSettings, IndexWriter writer) {
+            this.writer = writer;
+            this.ltrSettings = ltrSettings;
         }
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
             throws IOException {
             try {
-                FileParser.processFile(writer, new File(file.toString()));
+                FileParser.processFile(
+                    ltrSettings, writer, new File(file.toString()));
             } catch (IOException ignore) {
                 // don't index files that can't be read.
             }
@@ -138,13 +142,15 @@ public class IndexTREC {
         }
     }
     
-    static void indexDocs(final IndexWriter writer, Path path)
-        throws IOException {
-        DocVisitor docVisitor = new DocVisitor(writer);
+    static void indexDocs(LTRSettings ltrSettings, final IndexWriter writer, 
+        Path path)
+    throws IOException {
+        DocVisitor docVisitor = new DocVisitor(ltrSettings, writer);
         if (Files.isDirectory(path)) {
             Files.walkFileTree(path, visitor_opts, Integer.MAX_VALUE, docVisitor);
         } else {
-            FileParser.processFile(writer, new File(path.toString()));
+            FileParser.processFile(
+                ltrSettings, writer, new File(path.toString()));
         }
     }
 }
