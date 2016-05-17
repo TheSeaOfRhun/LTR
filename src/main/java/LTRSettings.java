@@ -21,6 +21,7 @@ public class LTRSettings {
 
     public int returnedResultCount;
     public ArrayList<String> warcFieldsToIndex;
+    public ArrayList<String> trecFieldsToIndex;
     public boolean storeFields;
     public boolean includeSnippets;
     public String   indexPath;
@@ -53,6 +54,7 @@ public class LTRSettings {
         stopFile = DEFAULT_STOP_FILE;
         returnedResultCount = DEFAULT_RESULT_COUNT;
         warcFieldsToIndex = new ArrayList<String>();
+        trecFieldsToIndex = new ArrayList<String>();
         includeSnippets = DEFAULT_INCLUDE_SNIPPETS;
         storeFields = DEFAULT_STORE_FIELDS;
     }

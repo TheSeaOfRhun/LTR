@@ -12,9 +12,12 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.Iterator;
 
+import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
-import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.lang.StringBuilder;
 
 // For classic TREC format processing.
 import org.jsoup.Jsoup;
@@ -112,8 +115,7 @@ public class FileParser {
 
         inputStream.close();
     } 
-
-
+  
     /**
      * Parses a TREC styled file (with &lt;DOC&gt; tags) and adds each document
      * to the given index.
@@ -127,14 +129,52 @@ public class FileParser {
     throws IOException {
         org.jsoup.nodes.Document soup;
         String docno, txt;        
-        soup = Jsoup.parse(input, null, "");
-        for (Element elm : soup.select("DOC")) {
-            docno = elm.child(0).text().trim();
-            txt   = elm.text();
-            Document doc = new Document();
-            doc.add(new StringField("docno", docno, Field.Store.YES));
-            doc.add(new TextField("contents", txt, Field.Store.NO));
-            writer.addDocument(doc);
+        Field.Store storeField = Field.Store.NO;
+        boolean addContentsField = settings.trecFieldsToIndex.size() == 0;
+        StringBuilder documentContent = null;
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(input));
+        String line;
+
+        // Determine whether non-id fields should be stored.
+        if(settings.storeFields)
+            storeField = Field.Store.YES;
+
+        while((line = reader.readLine()) != null){
+            // Found the start of a new document.
+            if(line.equals("<DOC>") && documentContent == null ){
+                documentContent = new StringBuilder();
+                documentContent.append(line+"\n");
+
+            // Found the end of the current document.
+            } else if(line.equals("</DOC>") && documentContent != null) {
+                documentContent.append(line);
+                soup = Jsoup.parse(documentContent.toString());
+                docno = soup.getElementsByTag("DOCNO").first().text().trim();
+                Document doc = new Document();
+                doc.add(new StringField("docno", docno, Field.Store.YES));
+
+                // Get all of the requested fields.
+                for(String field : settings.trecFieldsToIndex)
+                    if(field == "contents")
+                        addContentsField = true;
+                    else
+                        for(Element elm : soup.getElementsByTag(field))
+                            doc.add(new TextField(field, elm.text(), 
+                                storeField));
+    
+                // If no field is specified, index the whole thing.
+                if(addContentsField)
+                    doc.add(new TextField("contents", 
+                        documentContent.toString(), storeField));
+    
+                writer.addDocument(doc);
+                documentContent = null;
+
+            // Found the next line of the document.
+            } else if(documentContent != null) {
+                documentContent.append(line+"\n");
+            }
         }
     }
 
@@ -167,6 +207,7 @@ public class FileParser {
         Document doc;
         Field.Store storeField = Field.Store.NO;
         org.jsoup.nodes.Document soup;
+        boolean addContentsField = settings.warcFieldsToIndex.size() == 0;
 
         // Determine whether non-id fields should be stored.
         if(settings.storeFields)
@@ -197,8 +238,17 @@ public class FileParser {
 
             // Get all of the requested fields.
             for(String field : settings.warcFieldsToIndex)
-                for(Element elm : soup.getElementsByTag(field))
-                    doc.add(new TextField(field, elm.text(), storeField));
+                if(field == "contents")
+                    addContentsField = true;
+                else
+                    for(Element elm : soup.getElementsByTag(field))
+                        doc.add(new TextField(field, elm.text(), storeField));
+
+
+            // If no field is specified, index the whole thing.
+            if(addContentsField)
+                doc.add(new TextField("contents", soup.outerHtml(), 
+                    storeField));
 
             writer.addDocument(doc);
         }
