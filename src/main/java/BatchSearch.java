@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,145 +23,222 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.store.FSDirectory;
 
+// For highlighting.
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.search.highlight.TokenSources;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.TextFragment;
+import org.apache.lucene.search.highlight.QueryScorer;
+
 public class BatchSearch
 {
     private BatchSearch() {};
 
     public static void main(String[] args)
-	throws Exception
+        throws Exception
     {
-	String usage = "Usage:\tjava BatchSearch"
-	    + " [-index dir] [-similarity similarity]"
-	    + " [-field f] [-queries file]"
-	    + " [-stop STOP_FILE] [-stem STEMMER_NAME]\n";
-		
-	if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
-	    System.out.println(usage);
-	    System.exit(0);
-	}
+        LTRSettings ltrSettings = null;
+        String usage = "Usage:\tjava BatchSearch"
+            + "[-settings SETTINGS_FILE] [-index dir]\n"
+            + "\t[-similarity similarity] [-field f] [-queries file]\n"
+            + "\t[-stop STOP_FILE] [-stem STEMMER_NAME]\n";
+                
+        if (args.length == 0 || (args.length > 0 && 
+                ("-h".equals(args[0]) || "-help".equals(args[0])))) {
+            System.out.println(usage);
+            System.exit(0);
+        }
 
-	int    NUMRET    = 1000;
-	String index     = "index";
-	String field     = "contents";
-	String queries   = null;
-	String simstr    = null;
-	String[] opt     = new String[2];
+ 
+        // Make two passes through the arguments; the first time, look only for
+        // a settings file. All command line settings will then override the
+        // values in this file if it exists.
+        for(int i=0;i<args.length;i++){
+            if ("-settings".equals(args[i])) {
+                try {
+                    ltrSettings = LTRSettings.generateFromFile(args[i+1]);
+                } catch (FileNotFoundException e) {
+                    System.err.println("LTR settings file not found ("+
+                        args[i+1] +").");
+                    System.exit(1);
+                } catch (IOException e) {
+                    System.err.println("Error reading file ("+
+                        args[i+1] +"): "+ e); 
+                    System.exit(1);
+                }   
+                continue;
+            }   
+        }   
+ 
+        // Use default settings if a settings file wasn't provided.
+        if(ltrSettings == null)
+            ltrSettings = new LTRSettings();
 
-	for(int i = 0; i < args.length; i++) {
-	    if ("-index".equals(args[i])) {
-		index = args[i+1];
-		i++;
-	    } else if ("-field".equals(args[i])) {
-		field = args[i+1];
-		i++;
-	    } else if ("-queries".equals(args[i])) {
-		queries = args[i+1];
-		i++;
-	    } else if ("-similarity".equals(args[i])) {
-		simstr = args[i+1];
-		i++;
-	    } else if ("-stop".equals(args[i])) {
-		opt[0] = args[i+1];
-		i++;
-	    } else if ("-stem".equals(args[i])) {
-		opt[1] = args[i+1];
-		i++;
-	    }
-	}
+        // Read in command line settings -- these will override the settings
+        // file entries.
+        for(int i = 0; i < args.length; i++) {
+            if ("-index".equals(args[i])) {
+                ltrSettings.indexPath = args[i+1];
+                i++;
+            } else if ("-field".equals(args[i])) {
+                ltrSettings.searchField = args[i+1];
+                i++;
+            } else if ("-queries".equals(args[i])) {
+                ltrSettings.queryFile = args[i+1];
+                i++;
+            } else if ("-similarity".equals(args[i])) {
+                ltrSettings.similarity = args[i+1];
+                i++;
+            } else if ("-stop".equals(args[i])) {
+                ltrSettings.stopFile = args[i+1];
+                i++;
+            } else if ("-stem".equals(args[i])) {
+                ltrSettings.stemmer = args[i+1];
+                i++;
+            }
+        }
 
-       	if (simstr == null) {
-	    System.out.println("BatchSearch: Similarity not specified\n");
-	    System.exit(0);
-	}
+        if (ltrSettings.similarity == null) {
+            System.out.println("BatchSearch: Similarity not specified\n");
+            System.exit(0);
+        }
 
-       	if (queries == null) {
-	    System.out.println("BatchSearch: Query file not specified\n");
-	    System.exit(0);
-	}
+        if (ltrSettings.queryFile == null) {
+            System.out.println("BatchSearch: Query file not specified\n");
+            System.exit(0);
+        }
 
-	String pkg = "org.apache.lucene.search.similarities.";
-	Similarity similarity = null;
+        String pkg = "org.apache.lucene.search.similarities.";
+        Similarity similarity = null;
 
-	if (simstr.equals("DFRSimilarity")) {
-	    similarity = (Similarity)Class
-		.forName(pkg + simstr)
-		.getConstructor(BasicModel.class,
-				AfterEffect.class,
-				Normalization.class)
-		.newInstance(new BasicModelP(),
-			     new AfterEffectL(),
-			     new NormalizationH2());
-	}
-	else if (simstr.equals("IBSimilarity")) {
-	    similarity = (Similarity)Class
-		.forName(pkg + simstr)
-		.getConstructor(Distribution.class,
-				Lambda.class,
-				Normalization.class)
-		.newInstance(new DistributionSPL(),
-			     new LambdaDF(),
-			     new NormalizationH2());
-	}
-	else if (simstr.endsWith("Similarity")) {
-	    similarity = (Similarity)Class
-		.forName(pkg + simstr)
-		.getConstructor()
-		.newInstance();
-	}
-	else {
-	    similarity = (Similarity)Class
-		.forName(simstr)
-		.getConstructor()
-		.newInstance();
-	}
+        if (ltrSettings.similarity.equals("DFRSimilarity")) {
+            similarity = (Similarity)Class
+                .forName(pkg + ltrSettings.similarity)
+                .getConstructor(BasicModel.class,
+                                AfterEffect.class,
+                                Normalization.class)
+                .newInstance(new BasicModelP(),
+                             new AfterEffectL(),
+                             new NormalizationH2());
+        }
+        else if (ltrSettings.similarity.equals("IBSimilarity")) {
+            similarity = (Similarity)Class
+                .forName(pkg + ltrSettings.similarity)
+                .getConstructor(Distribution.class,
+                                Lambda.class,
+                                Normalization.class)
+                .newInstance(new DistributionSPL(),
+                             new LambdaDF(),
+                             new NormalizationH2());
+        }
+        else if (ltrSettings.similarity.endsWith("Similarity")) {
+            similarity = (Similarity)Class
+                .forName(pkg + ltrSettings.similarity)
+                .getConstructor()
+                .newInstance();
+        }
+        else {
+            similarity = (Similarity)Class
+                .forName(ltrSettings.similarity)
+                .getConstructor()
+                .newInstance();
+        }
 
-	if (similarity == null) {
-	    System.out.println("BatchSearch: Unsupported similarity class: " + similarity + "\n");
-	    System.exit(0);
-	}
-		
-	IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
-	IndexSearcher searcher = new IndexSearcher(reader);
-	searcher.setSimilarity(similarity);
-	TrecAnalyzer analyzer = new TrecAnalyzer(opt);
-	SimpleQueryParser parser = new SimpleQueryParser(analyzer, field);
-		
-	org.jsoup.nodes.Document soup;
-	String str, qid, txt;
-	str = FileUtils.readFileToString(new File(queries));
-	soup = Jsoup.parse(str);
-	for (Element elm : soup.select("TOP")) {
-	    qid = elm.child(0).text().trim();
-	    txt = elm.child(1).text();
-	    Query query = parser.parse(txt);
-	    doBatchSearch(searcher, qid, query, simstr, NUMRET);
-	}
-	reader.close();
+        if (similarity == null) {
+            System.out.println("BatchSearch: Unsupported similarity class: "+ 
+            similarity +"\n");
+            System.exit(0);
+        }
+                
+        IndexReader reader = DirectoryReader.open(FSDirectory.open(
+            Paths.get(ltrSettings.indexPath)));
+        IndexSearcher searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(similarity);
+        TrecAnalyzer analyzer = new TrecAnalyzer(ltrSettings);
+        SimpleQueryParser parser = new SimpleQueryParser(analyzer, 
+            ltrSettings.searchField);
+                
+        org.jsoup.nodes.Document soup;
+        String str, qid, txt;
+        str = FileUtils.readFileToString(new File(ltrSettings.queryFile));
+        soup = Jsoup.parse(str);
+        for (Element elm : soup.select("TOP")) {
+            qid = elm.child(0).text().trim();
+            txt = elm.child(1).text();
+            Query query = parser.parse(txt);
+            doBatchSearch(ltrSettings, searcher, qid, query, 
+                ltrSettings.similarity, analyzer);
+        }
+        reader.close();
     }
 
-    public static void doBatchSearch(IndexSearcher searcher,
-				     String qid, Query query,
-				     String runtag, int numret)	 
-	throws IOException {
-	TopDocs results = searcher.search(query, numret);
-	ScoreDoc[] hits = results.scoreDocs;
-	HashMap<String, String> seen = new HashMap<String, String>(numret);
-	int numTotalHits = results.totalHits;
-	int start = 0;
-	int end = numTotalHits < numret ? numTotalHits : numret;
+    public static void doBatchSearch(LTRSettings settings,
+                                     IndexSearcher searcher,
+                                     String qid, Query query,
+                                     String runtag, Analyzer analyzer)
+    throws IOException {
+        TopDocs results = searcher.search(query, settings.returnedResultCount);
+        ScoreDoc[] hits = results.scoreDocs;
+        HashMap<String, String> seen = 
+            new HashMap<String, String>(settings.returnedResultCount);
+        int numTotalHits = results.totalHits;
+        int start = 0;
+        int end = numTotalHits < settings.returnedResultCount ? 
+            numTotalHits : settings.returnedResultCount;
 
-	for (int i = start; i < end; i++) {
-	    Document doc = searcher.doc(hits[i].doc);
-	    String docno = doc.get("docno");
-	    // There are duplicate document numbers in the
-	    // FR collection, so only output a given docno
-	    // once.
-	    if (seen.containsKey(docno))
-		continue;
-	    seen.put(docno, docno);
-	    System.out.println(qid + " " + "Q0" + " " + docno
-			           + " " + i    + " " + hits[i].score
-			           + " " + runtag);
-	}
+        for (int i = start; i < end; i++) {
+            Document doc = searcher.doc(hits[i].doc);
+            String docno = doc.get("docno");
+            // There are duplicate document numbers in the
+            // FR collection, so only output a given docno
+            // once.
+            if (seen.containsKey(docno))
+                continue;
+            seen.put(docno, docno);
+            System.out.println(qid + " " + "Q0" + " " + docno
+                                   + " " + i    + " " + hits[i].score
+                                   + " " + runtag);
+
+            if(settings.includeSnippets){
+                try {
+                    SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter();
+                    Highlighter highlighter = new Highlighter(htmlFormatter, 
+                        new QueryScorer(query));
+                    TokenStream tokenStream = TokenSources.getAnyTokenStream(
+                        searcher.getIndexReader(), hits[i].doc, 
+                        settings.searchField, analyzer);
+                    /*
+                    TextFragment[] frag = highlighter.getBestTextFragments(
+                        tokenStream, doc.get(settings.searchField), true, 
+                        settings.maxSnippetFragments);
+                    */
+                    String fragment = highlighter.getBestFragments(
+                        tokenStream, doc.get(settings.searchField), 
+                        settings.maxSnippetFragments, "...") +"...";
+                    if(!Character.isUpperCase(fragment.charAt(0)))
+                        fragment = "..."+ fragment;
+                    System.out.println(fragment);
+                    
+                    /*
+                    for (int j = 0; j < frag.length; j++) {
+                        if ((frag[j] != null) && (frag[j].getScore() > 0)) {
+                            String fragment = frag[j].toString().
+                                replaceAll("\\s+", " ") + "...";
+                            if(j == 0 && 
+                                    !Character.isUpperCase(fragment.charAt(0)))
+                                fragment = "..."+fragment;
+                            System.out.print(fragment);
+                        }
+                    }
+                    System.out.println("");
+                    */
+                } catch(Exception e) {
+                    System.err.println("Problem extracting snippet: "+
+                        e.getMessage());
+                }
+            }
+        }
     }
+
 }

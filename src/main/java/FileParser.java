@@ -166,7 +166,7 @@ public class FileParser {
                 // If no field is specified, index the whole thing.
                 if(addContentsField)
                     doc.add(new TextField("contents", 
-                        documentContent.toString(), storeField));
+                        soup.text(), storeField));
     
                 writer.addDocument(doc);
                 documentContent = null;
