@@ -156,7 +156,7 @@ public class FileParser {
 
                 // Get all of the requested fields.
                 for(String field : settings.trecFieldsToIndex)
-                    if(field == "contents")
+                    if(field.equals("contents"))
                         addContentsField = true;
                     else
                         for(Element elm : soup.getElementsByTag(field))
@@ -238,7 +238,7 @@ public class FileParser {
 
             // Get all of the requested fields.
             for(String field : settings.warcFieldsToIndex)
-                if(field == "contents")
+                if(field.equals("contents"))
                     addContentsField = true;
                 else
                     for(Element elm : soup.getElementsByTag(field))
