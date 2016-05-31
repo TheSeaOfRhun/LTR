@@ -1,0 +1,43 @@
+## File: example/settings.hjson
+## For more information about the format of this file and the available options,
+## see ../README.txt.
+{
+    ## SHARED (INDEXING + RETRIEVAL) OPTIONS
+
+    ## For stemmer and stopFile, set to None to not use anything, or do not 
+    ## include them.
+    stopFile:           stop.txt
+    stemmer:            PorterStemFilter
+  
+
+    ## INDEXING OPTIONS
+ 
+    indexPath:          index
+    docsPath:           corpus
+
+    ## Set this to true in order to have the option of including snippets;
+    ## this will increase the size of the index.
+    storeFields:        true
+
+    ## Field indexing options. The reserved field name "contents" can be used
+    ## to index the entire document (without markup tags). If no fields are
+    ## given, "contents" will be assumed. If one or more fields are specified,
+    ## "contents" will only be indexed if specified as part of that list.
+    warcFieldsToIndex:  ["contents", "title", "body", "a"]
+    trecFieldsToIndex:  []
+
+
+    ## RETRIEVAL OPTIONS
+
+    ## Currently, only one search field can be specified, and this is the same
+    ## one from which snippets are extracted if includeSnippets is set to true.
+    searchField:         contents
+
+    similarity:          BM25Similarity
+    queryFile:           queries.txt 
+    returnedResultCount: 10
+
+    ## In order for snippets to be used, the storeFields must be set to true
+    ## during indexing.
+    includeSnippets:     true
+}     
