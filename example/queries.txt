@@ -1,0 +1,30 @@
+<TOP>
+    <NUM>1</NUM>
+    <TEXT>
+        web page
+    </TEXT>
+</TOP>
+<TOP>
+    <NUM>2</NUM>
+    <TEXT>
+        a sample query
+    </TEXT>
+</TOP>
+<TOP>
+    <NUM>3</NUM>
+    <TEXT>
+        second
+    </TEXT>
+</TOP>
+<TOP>
+    <NUM>4</NUM>
+    <TEXT>
+        third
+    </TEXT>
+</TOP>
+<TOP>
+    <NUM>5</NUM>
+    <TEXT>
+        page.
+    </TEXT>
+</TOP>
