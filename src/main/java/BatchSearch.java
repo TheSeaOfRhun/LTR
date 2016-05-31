@@ -24,15 +24,18 @@ import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.store.FSDirectory;
 
 // For highlighting.
+import java.lang.StringBuilder;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.search.highlight.TokenSources;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.apache.lucene.search.highlight.SimpleFragmenter;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.TextFragment;
 import org.apache.lucene.search.highlight.QueryScorer;
 
 public class BatchSearch
 {
+    public static final int FRAGMENT_SIZE_CHARS = 15;
     private BatchSearch() {};
 
     public static void main(String[] args)
@@ -173,6 +176,33 @@ public class BatchSearch
         reader.close();
     }
 
+    /**
+     * Concatenates the values across all instances of a field within the
+     * given document. E.g., if the field name is "a", the value of all "a"
+     * fields within the document will be concatenated into one string and 
+     * returned.
+     *
+     * @param doc The document to extract field values from.
+     * @param fieldName The field to extract.
+     * @return A concatenation of the field values.
+     */
+    public static String concatenateFieldValues(Document doc, String fieldName){
+        StringBuilder concatenatedValue = new StringBuilder();
+        String[] fieldValues = doc.getValues(fieldName);
+
+        // A little shortcut in the event that this field only occurs once.
+        if(fieldValues.length == 1)
+            return fieldValues[0];
+
+        // In all other cases, perform the concatenation.
+        for(int i = 0; i < fieldValues.length; i++){
+            concatenatedValue.append(fieldValues[i]);
+            if(i < fieldValues.length-1)
+                concatenatedValue.append(" ");
+        }
+        return concatenatedValue.toString();
+    }
+
     public static void doBatchSearch(LTRSettings settings,
                                      IndexSearcher searcher,
                                      String qid, Query query,
@@ -200,39 +230,31 @@ public class BatchSearch
                                    + " " + i    + " " + hits[i].score
                                    + " " + runtag);
 
+            // Extract and display a snippet for each result if asked to
+            // do so.
             if(settings.includeSnippets){
                 try {
-                    SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter();
+                    String textToHighlight = 
+                        concatenateFieldValues(doc, settings.searchField);
+                    SimpleHTMLFormatter htmlFormatter = 
+                        new SimpleHTMLFormatter();
                     Highlighter highlighter = new Highlighter(htmlFormatter, 
                         new QueryScorer(query));
-                    TokenStream tokenStream = TokenSources.getAnyTokenStream(
-                        searcher.getIndexReader(), hits[i].doc, 
-                        settings.searchField, analyzer);
-                    /*
-                    TextFragment[] frag = highlighter.getBestTextFragments(
-                        tokenStream, doc.get(settings.searchField), true, 
-                        settings.maxSnippetFragments);
-                    */
+                    highlighter.setTextFragmenter(new SimpleFragmenter(
+                        FRAGMENT_SIZE_CHARS));
+
+                    TokenStream tokenStream = TokenSources.getTokenStream(
+                        settings.searchField, null, textToHighlight,
+                        analyzer, -1);
+
                     String fragment = highlighter.getBestFragments(
-                        tokenStream, doc.get(settings.searchField), 
+                        tokenStream,
+                        textToHighlight,
                         settings.maxSnippetFragments, "...") +"...";
                     if(!Character.isUpperCase(fragment.charAt(0)))
                         fragment = "..."+ fragment;
                     System.out.println(fragment);
                     
-                    /*
-                    for (int j = 0; j < frag.length; j++) {
-                        if ((frag[j] != null) && (frag[j].getScore() > 0)) {
-                            String fragment = frag[j].toString().
-                                replaceAll("\\s+", " ") + "...";
-                            if(j == 0 && 
-                                    !Character.isUpperCase(fragment.charAt(0)))
-                                fragment = "..."+fragment;
-                            System.out.print(fragment);
-                        }
-                    }
-                    System.out.println("");
-                    */
                 } catch(Exception e) {
                     System.err.println("Problem extracting snippet: "+
                         e.getMessage());
