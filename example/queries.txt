@@ -1,0 +1,12 @@
+<TOP>
+    <NUM>1</NUM>
+    <TEXT>
+        web page
+    </TEXT>
+</TOP>
+<TOP>
+    <NUM>2</NUM>
+    <TEXT>
+        a sample query
+    </TEXT>
+</TOP>

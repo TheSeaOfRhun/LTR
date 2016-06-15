@@ -1,0 +1,55 @@
+WARC/1.0
+WARC-Type: warcinfo
+WARC-Date: 2016-01-01T00:00:00Z
+WARC-Filename: example.warc.
+WARC-Number-of-Documents: 1
+WARC-File-Length: 1044275632
+WARC-Data-Type: web crawl
+WARC-Record-ID: <urn:uuid:4ed30d67-f804-456b-b53a-a4c935183324>
+Content-Type: application/warc-fields
+Content-Length: 1
+
+software: Example
+format: WARC File Format 1.0
+conformsTo: http://bibnum.bnf.fr/WARC/WARC_ISO_28500_version1_latestdraft.pdf
+isPartOf: Example
+description:  An example corpus.
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Date: 2012-02-26T08:46:27Z
+WARC-TREC-ID: warc-doc1
+WARC-IP-Address: localhost
+WARC-Target-URI: localhost/example.html
+WARC-Record-ID: <urn:uuid:b55bc99f-3b63-5030-9af4-6a4de42c5c9b>
+Content-Type: application/http; msgtype=response
+Content-Length: 555
+
+HTTP/1.1 200 OK
+Date: Sun, 01 Jan 2016 00:00:00 GMT
+Server: Apache
+Expires: Thu, 01 Jan 1981 00:00:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+X-Pingback: http://localhost/example.html
+Vary: Accept-Encoding
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+<html>
+<head>
+  <title>An example web page</title>
+</head>
+<body>
+<h1>Welcome!</h1>
+
+<p>
+This is an example web page.
+</p>
+
+<a href="x.html">A link to a second page.</a>
+<a href="y.html">A link to a third page.</a>
+</body>
+</html>
+
