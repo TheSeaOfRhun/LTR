@@ -1,0 +1,13 @@
+<DOC>
+<DOCNO> trec-doc-1 </DOCNO>
+<ANOTHER_TAG>The TREC parser will handle arbitrary tags </ANOTHER_TAG>
+<TEXT>
+This is some sample text.
+</TEXT>
+</DOC>
+<DOC>
+<DOCNO> trec-doc-2 </DOCNO>
+<TEXT>
+You can have multiple documents in a single file.
+</TEXT>
+</DOC>

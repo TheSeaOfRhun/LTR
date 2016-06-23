@@ -26,6 +26,8 @@ E. PARSING & INDEXING A CORPUS
     
     2. CODE: TrecAnalyzer
 
+    3. DOCUMENT TYPES
+
 F. RETRIEVAL
 
     1.  CODE: BatchSearch
@@ -38,10 +40,10 @@ A. STEMMERS
 Here is a handful of stemmer implementations in Lucene, in brackets
 are names they are commonly known by:
 
-	PorterStemFilter
-	KStemFilter (Krovetz stemmer)
-	SnowballFilter
-	EnglishMinimalStemFilter (S-Stemmer)
+    PorterStemFilter
+    KStemFilter (Krovetz stemmer)
+    SnowballFilter
+    EnglishMinimalStemFilter (S-Stemmer)
 
 See: https://lucene.apache.org/core/5_4_0/analyzers-common/org/apache/lucene/analysis/en/package-summary.html
 
@@ -133,7 +135,7 @@ public class TFIDFScorer extends SimScorer
     public float score(int doc, float tf)
     {
         float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
-    	return w;
+        return w;
     }
 
     ...
@@ -149,29 +151,30 @@ documents as having been partitioned into 'fields' which necessitates
 a sum over the fields. My interpretation is that, control does not
 step into the 'else' block and even if it does, the sum is safe.
 
-public final SimWeight computeWeight(float queryBoost, CollectionStatistics collectionStats, TermStatistics... termStats)
+public final SimWeight computeWeight(float queryBoost, 
+    CollectionStatistics collectionStats, TermStatistics... termStats)
 {
     float N, n, idf, adl, dl;
     
     idf = 1.0f;
     N   = collectionStats.maxDoc();
     adl = collectionStats.sumTotalTermFreq() / N;
-	
+    
     if (termStats.length == 1) {
         n = termStats[0].docFreq();
-	idf = log(N/n);
+    idf = log(N/n);
     }
     else {
         for (final TermStatistics stat : termStats) {
-	n = stat.docFreq();
-	idf += log(N/n);
+    n = stat.docFreq();
+    idf += log(N/n);
        }
     }
-	
+    
     float K[] = new float[256];
     for (int i = 0; i < K.length; i++) {
         dl = decodeNorm((byte)i);
-	K[i] = 1.0f;
+    K[i] = 1.0f;
     }
 
     return new TFIDFWeight(collectionStats.field(), idf, adl, K);
@@ -217,9 +220,9 @@ operations of each other;
 
 private static final float[] NORM = new float[256];
 static {
-   for (int i = 0; i < 256; i++) {
-   NORM[i] = SmallFloat.byte315ToFloat((byte)i);
-  }
+    for (int i = 0; i < 256; i++) {
+        NORM[i] = SmallFloat.byte315ToFloat((byte)i);
+    }
 }
 
 ...
@@ -260,14 +263,14 @@ public class TFIDFScorer extends SimScorer
     throws IOException
     {
         this.bw    = bw;
-	this.K     = bw.K;
-	this.norms = norms;
+        this.K     = bw.K;
+        this.norms = norms;
     }
     
     public float score(int doc, float tf)
     {
         float w = tf / K[(byte)norms.get(doc) & 0xFF] * bw.idf;
-	return w;
+        return w;
     }
     
 ...
@@ -276,11 +279,13 @@ public class TFIDFScorer extends SimScorer
 ----------------------------------------------------------------------
 D. PARSING & INDEXING A CORPUS
 
-java -cp LTR/lib/* IndexTREC -index [w]
-     	 	   	     -docs  [x]
-			     -stop  [y]
-			     -stem  [z]
+java -cp "LTR/lib/*" IndexTREC -settings [v]
+                               -index    [w]
+                               -docs     [x]
+                               -stop     [y]
+                               -stem     [z]
 
+[v] - Path to a settings file.
 [w] - Directory where the index will be placed.
 [x] - Directory containing the document corpus.
 [y] - A file containing the stop words.
@@ -297,8 +302,8 @@ command-line arguments have been parsed and starting points
 determined:
 
 ...
-Directory dir         = FSDirectory.open(Paths.get(indexPath));
-TrecAnalyzer analyzer = new TrecAnalyzer(opt);
+Directory dir         = FSDirectory.open(Paths.get(ltrSettings.indexPath));
+TrecAnalyzer analyzer = new TrecAnalyzer(ltrSettings);
 IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 iwc.setOpenMode(OpenMode.CREATE);
 IndexWriter writer    = new IndexWriter(dir, iwc);
@@ -309,22 +314,27 @@ writer.close();
 Functionality for parsing the corpus is implemented in these
 functions:
 
-public static class DocVisitor extends SimpleFileVisitor<Path>
-static void parseDoc(IndexWriter writer, Path file)
-static void indexDocs(final IndexWriter writer, Path path)
+class IndexTREC:
+  public static class DocVisitor extends SimpleFileVisitor<Path>
+  static void indexDocs(
+    LTRSettings settings, final IndexWriter writer, Path path)
 
-A parser, parseDoc() is plugged into
-DocVisitor.visitFile(). parseDoc() uses the Jsoup library to parse the
-mark-up (XML-like) in TREC documents and pick all the content between
-any tag that may exist within a <DOC> tag (which is a unit of TREC
-document), except the contents of the <DOCNO> tag, which it passes on
-to Lucene to be used as unique identifiers for the
-documents. indexDocs() uses a DocVisitor object to walk a directory
-tree and gobble up files. From the programmer's point of view, the
-parser is the only bit of engineering that she is able to do, and the
-rest of the work is wiring loose ends and plugging open ports. The
-block of code in main(), is a series of transformations up to the
-point of leaving it to indexDocs() which sets the ball rolling:
+class FileParser:
+  public static processFile(LTRSettings settings, IndexWriter writer, File file)
+
+The processFile() method is a parser mapper and is plugged into
+DocVisitor.visitFile().  It checks the extension of the file and sends it to
+an appropriate parser, uncompressing if necessary. See D.3 DOCUMENT TYPES for
+details on available parsers. Each parser is responsible for processing a
+particular file type, extracting documents and providing them to the index
+writer.
+
+The indexDocs() method uses a DocVisitor object to walk a directory tree and
+gobble up files. From the programmer's point of view, the parser is the only
+bit of engineering that she is able to do, and the rest of the work is wiring
+loose ends and plugging open ports. The block of code in main(), is a series
+of transformations up to the point of leaving it to indexDocs() which sets the
+ball rolling:
 
 indexDocs(IndexWriter(Directory, IndexWriterConfig(TrecAnalyzer(stop, stem))))
 
@@ -338,7 +348,11 @@ the name of the stemmer object. Then in TokenStreamComponents the
 term-processing pipeline is set up, as before, in a series of
 transformations:
 
-TokenStreamComponents(StemmerX(StopFilter(LowerCaseFilter(WhitespaceTokenizer()))))
+TokenStreamComponents(
+    StemmerX(
+        StopFilter(
+            LowerCaseFilter(
+                WhitespaceTokenizer()))))
 
 This is a conceptual view, where I have quoted the actual object name
 from the code (except StemmerX which is meant to be one of several
@@ -347,14 +361,58 @@ reflection), and is not syntactically correct. Nonetheless it sketches
 the idea.
 
 ----------------------------------------------------------------------
+D.3 DOCUMENT TYPES
+
+COMPRESSED CORPUS FILES
+
+Any file found in the given docPath ending in any of the extensions:
+    - bz
+    - bzip2
+    - gz
+    - gzip
+will be uncompressed. The uncompressed stream will then be sent to the parser
+associated with the file extension left after the compression extension is
+removed (e.g., a file named input.warc.gz will be uncompressed and sent to the
+WARC parser). 
+
+
+TREC FORMAT (DEFAULT)
+
+File extensions: .* (anything that doesn't match other formats)
+Parser:          FileParser.parseTRECFile(...)
+
+This is the format used by TREC text corpuses, e.g., newwire collections such
+as AP, as well as TREC web corpuses such as GOV2. Each file may consist of one
+or more documents, where each document is contained within a <DOC> tag and
+must have a child tag named <DOCNO> specifying the TREC docno of the document.
+Any number of additional tags can be included beyond <DOCNO>. When no index
+fields are specified in the settings file, the document text excluding tags
+themselves will be indexed. You may specify specific fields to index to
+alter this behavior. 
+
+
+WARC FORMAT
+
+File extensions: .warc
+Parser:          FileParser.parseWARCFile(...)
+
+Used for ClueWeb 2009 and 2012, this web archive format also includes a 
+WARC-TREC-ID field in the header of each document. Only documents that have
+that header and have a WARC-TYPE field value of "response" are processed. If
+no index fields are specified, the text of the document is indexed, excluding
+tags. 
+  
+----------------------------------------------------------------------
 E. RETRIEVAL
 
-java -cp LTR/lib/* BatchSearch -index      [v]
-     	 	   	       -queries    [w]
-			       -similarity [x]
-			       -stop       [y]
-			       -stem       [z]
+java -cp "LTR/lib/*" BatchSearch -settings   [u]
+                                 -index      [v]
+                                 -queries    [w]
+                                 -similarity [x]
+                                 -stop       [y]
+                                 -stem       [z]
 
+[u] - Path to a settings file.
 [v] - Path to the directory that contains the index.
 [w] - The file containing TREC queries.
 [x] - The class name of Lucene's similarity model.
@@ -374,7 +432,8 @@ query, and printing search results in TREC format (TREC runs), most of
 the work involves tying loose ends.
 
 ...
-IndexReader reader       = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+IndexReader reader       = DirectoryReader.open(
+                            FSDirectory.open(Paths.get(index)));
 IndexSearcher searcher   = new IndexSearcher(reader);
 searcher.setSimilarity(similarity);
 TrecAnalyzer analyzer    = new TrecAnalyzer(opt);
