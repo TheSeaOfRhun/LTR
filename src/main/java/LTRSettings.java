@@ -22,6 +22,7 @@ public class LTRSettings {
     public static final String  DEFAULT_QUERY_FILE       = null;
     public static final String  DEFAULT_SIMILARITY       = null;
     public static final String  DEFAULT_SEARCH_FIELD     = "contents";
+    public static final String  DEFAULT_PARSER           = "auto";
 
     public ArrayList<String> warcFieldsToIndex;
     public ArrayList<String> trecFieldsToIndex;
@@ -36,6 +37,7 @@ public class LTRSettings {
     public String   similarity;
     public String   queryFile;
     public String   searchField; 
+    public String   parser;
 
     /**
      * Creates an LTRSettings file from an HJSON file.
@@ -68,6 +70,7 @@ public class LTRSettings {
         queryFile           = DEFAULT_QUERY_FILE;
         searchField         = DEFAULT_SEARCH_FIELD;
         maxSnippetFragments = DEFAULT_SNIPPET_FRAGS;
+        parser              = DEFAULT_PARSER;
     }
 
     //@override

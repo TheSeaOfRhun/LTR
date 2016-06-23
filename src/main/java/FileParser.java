@@ -102,20 +102,68 @@ public class FileParser {
             extension = FilenameUtils.getExtension(
                 removeExtension(file.getName(), "."+extension));
 
+        // If the user specified a parser, use that; if not, use the default.
+        if(!settings.parser.equals("auto"))
+            extension = settings.parser;
+
         // Check
         switch(extension){
             case "warc":
-                System.err.println("Found WARC document!");
+                //System.err.println("Found WARC document!");
                 parseWARCFile(settings, writer, inputStream);
                 break;
+
+            // Simple means that the docno is the filename and the contents
+            // are not processed as fields.
+            case "simple":
+                parseSimpleFile(settings, writer, inputStream, file.getName());
+                break;
+
             default:
-                System.err.println("Found TREC document!");
+                //System.err.println("Found TREC document!");
                 parseTRECFile(settings, writer, inputStream);
         } 
 
         inputStream.close();
     } 
-  
+
+    /**
+     * Treats the given file as a stand alone document (the entire contents of
+     * the file is used as the document contents) and the docno is the base
+     * filename.
+     *
+     * @param settings The global settings.
+     * @param writer The index to write the document to.
+     * @param input  The input stream to parse.
+     * @param filename The name of the file.
+     */
+    public static void parseSimpleFile(LTRSettings settings, IndexWriter writer,
+        InputStream input, String filename)
+    throws IOException {
+        String docno = FilenameUtils.getBaseName(filename);
+        Field.Store storeField = Field.Store.NO;
+        StringBuilder documentContent = new StringBuilder();
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(input));
+        String line;
+
+        // Determine whether non-id fields should be stored.
+        if(settings.storeFields)
+            storeField = Field.Store.YES;
+
+        while((line = reader.readLine()) != null)
+            documentContent.append(line);
+
+        Document doc = new Document();
+        doc.add(new StringField("docno", docno, Field.Store.YES));
+
+        // Unlike other parsers, we always index the contents of simple files.
+        doc.add(new TextField("contents", 
+            documentContent.toString(), storeField));
+
+        writer.addDocument(doc);
+    }
+ 
     /**
      * Parses a TREC styled file (with &lt;DOC&gt; tags) and adds each document
      * to the given index.
