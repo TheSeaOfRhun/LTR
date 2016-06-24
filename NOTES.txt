@@ -3,6 +3,9 @@ NOTES ON LUCENE-5.4.0
 Rup Palchowdhury
 rup.palchowdhury [at] gmail [dot] com
 
+Henry Feild
+hfeild [at] endicott [dot] edu
+
 ----------------------------------------------------------------------
 TABLE OF CONTENTS
 
