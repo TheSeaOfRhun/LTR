@@ -3,6 +3,9 @@ LTR
 Rup Palchowdhury
 rup.palchowdhury [at] gmail [dot] com
 
+Henry Feild
+hfeild [at] endicott [dot] edu
+
 ----------------------------------------------------------------------
 DESCRIPTION
 
