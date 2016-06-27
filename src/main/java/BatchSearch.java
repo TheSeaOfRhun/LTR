@@ -80,27 +80,7 @@ public class BatchSearch
 
         // Read in command line settings -- these will override the settings
         // file entries.
-        for(int i = 0; i < args.length; i++) {
-            if ("-index".equals(args[i])) {
-                ltrSettings.indexPath = args[i+1];
-                i++;
-            } else if ("-field".equals(args[i])) {
-                ltrSettings.searchField = args[i+1];
-                i++;
-            } else if ("-queries".equals(args[i])) {
-                ltrSettings.queryFile = args[i+1];
-                i++;
-            } else if ("-similarity".equals(args[i])) {
-                ltrSettings.similarity = args[i+1];
-                i++;
-            } else if ("-stop".equals(args[i])) {
-                ltrSettings.stopFile = args[i+1];
-                i++;
-            } else if ("-stem".equals(args[i])) {
-                ltrSettings.stemmer = args[i+1];
-                i++;
-            }
-        }
+        ltrSettings.parseCommandLineArguments(args);
 
         if (ltrSettings.similarity == null) {
             System.out.println("BatchSearch: Similarity not specified\n");

@@ -71,22 +71,8 @@ public class IndexTREC {
             ltrSettings = new LTRSettings();
      
         // Second pass: override defaults/file settings with command line 
-        // settings.           
-        for(int i=0;i<args.length;i++) {
-            if ("-index".equals(args[i])) {
-                ltrSettings.indexPath = args[i+1];
-                i++;
-            } else if ("-docs".equals(args[i])) {
-                ltrSettings.docsPath = args[i+1];
-                i++;
-            } else if ("-stop".equals(args[i])) {
-                ltrSettings.stopFile = args[i+1];
-                i++;
-            } else if ("-stem".equals(args[i])) {
-                ltrSettings.stemmer = args[i+1];
-                i++;
-           }
-        }
+        // settings.
+        ltrSettings.parseCommandLineArguments(args); 
 
         if (ltrSettings.docsPath == null) {
             System.err.println("Usage: " + usage);

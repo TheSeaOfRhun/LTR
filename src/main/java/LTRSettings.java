@@ -73,6 +73,54 @@ public class LTRSettings {
         parser              = DEFAULT_PARSER;
     }
 
+    /**
+     * Extracts settings from command line arguments.
+     *
+     * @param args A list of command line arguments to parse. 
+     */
+    public void parseCommandLineArguments(String[] args){
+        for(int i = 0; i < args.length; i+=2) {
+            if ("-index".equals(args[i]) || "-indexPath".equals(args[i]))
+                indexPath = args[i+1];
+            else if ("-docs".equals(args[i]) || "-docsPath".equals(args[i]))
+                docsPath = args[i+1];
+            else if ("-stop".equals(args[i]) || "-stopFile".equals(args[i]))
+                stopFile = args[i+1];
+            else if ("-stem".equals(args[i]) || "-stemmer".equals(args[i])) 
+                stemmer = args[i+1];
+            else if ("-field".equals(args[i]) || "-searchField".equals(args[i])) 
+                searchField = args[i+1];
+            else if ("-queries".equals(args[i]) || "-queryFile".equals(args[i])) 
+                queryFile = args[i+1];
+            else if ("-similarity".equals(args[i])) 
+                similarity = args[i+1];
+            else if ("-returnedResultCount".equals(args[i])) 
+                returnedResultCount = Integer.parseInt(args[i+1]);
+            else if ("-parser".equals(args[i])) 
+                parser = args[i+1];
+            else if ("-includeSnippets".equals(args[i])) 
+                includeSnippets = "true".equals(args[i+1]);
+            else if ("-storeFields".equals(args[i])) 
+                storeFields = "true".equals(args[i+1]);
+            else if ("-maxSnippetFragments".equals(args[i])) 
+                maxSnippetFragments = Integer.parseInt(args[i+1]);
+            else if ("-warcFieldsToIndex".equals(args[i])) 
+                warcFieldsToIndex = csvToArrayList(args[i+1]);
+            else if ("-trecFieldsToIndex".equals(args[i])) 
+                trecFieldsToIndex = csvToArrayList(args[i+1]);
+            else
+                i--; 
+        } 
+    }
+
+    public static ArrayList<String> csvToArrayList(String csvString){
+        ArrayList<String> list = new ArrayList<String>();
+        String[] columns = csvString.split(",");
+        for(int i = 0; i < columns.length; i++)
+            list.add(columns[i]);
+        return list;
+    }
+
     //@override
     public String toString(){
         return (new Gson()).toJson(this);
