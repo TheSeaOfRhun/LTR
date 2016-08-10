@@ -23,7 +23,7 @@ C. MODIFYING MODELS
     
     4. K
 
-E. PARSING & INDEXING A CORPUS
+D. PARSING & INDEXING A CORPUS
 
     1. CODE: IndexTREC
     
@@ -31,11 +31,10 @@ E. PARSING & INDEXING A CORPUS
 
     3. DOCUMENT TYPES
 
-F. RETRIEVAL
+E. RETRIEVAL
 
     1.  CODE: BatchSearch
 
-G. FAQ
 
 ----------------------------------------------------------------------
 A. STEMMERS
@@ -288,6 +287,10 @@ java -cp "LTR/lib/*" IndexTREC -settings [v]
 [y] - A file containing the stop words.
 [z] - The class that implements a particular stemming algorithm.
 
+(Additional settings exist; any setting that is valid in the settings file
+can be provided on the command line with a '-' prefix; see README.txt for
+details.)
+
 ----------------------------------------------------------------------
 D.1 CODE: IndexTREC
 
@@ -349,13 +352,13 @@ TokenStreamComponents(
     StemmerX(
         StopFilter(
             LowerCaseFilter(
-                WhitespaceTokenizer()))))
+                XTokenizer()))))
 
-This is a conceptual view, where I have quoted the actual object name
-from the code (except StemmerX which is meant to be one of several
-stemmer object from Lucene's libraries chosen at run-time using
-reflection), and is not syntactically correct. Nonetheless it sketches
-the idea.
+This is a conceptual view, where I have quoted the actual object name from the
+code (except StemmerX which is meant to be one of several stemmer object from
+Lucene's libraries chosen at run-time using reflection, and XTokenizer, which
+can be an arbitrary tokenizer, with WhitespaceTokenizer as the default), and
+is not syntactically correct.  Nonetheless it sketches the idea.
 
 ----------------------------------------------------------------------
 D.3 DOCUMENT TYPES
@@ -415,6 +418,10 @@ java -cp "LTR/lib/*" BatchSearch -settings   [u]
 [x] - The class name of Lucene's similarity model.
 [y] - A file containing the stop words.
 [z] - The class that implements a particular stemming algorithm.
+
+(Additional settings exist; any setting that is valid in the settings file
+can be provided on the command line with a '-' prefix; see README.txt for
+details.)
 
 ----------------------------------------------------------------------
 E.1 CODE: BatchSearch

@@ -8,7 +8,15 @@
     ## include them.
     stopFile:           stop.txt
     stemmer:            PorterStemFilter
-  
+
+    ## The default tokenizer is WhitespaceTokenizer. Here, we change it to
+    ## ClassicTokenizer.
+    tokenizer:          ClassicTokenizer
+
+    ## If we wanted to use a different tokenizer, say Lucene's KeywordTokenizer,
+    ## these are the settings we would use.
+    #tokenizer:          custom
+    #customTokenizer:    org.apache.lucene.analysis.core.KeywordTokenizer
 
     ## INDEXING OPTIONS
  

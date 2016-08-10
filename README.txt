@@ -31,6 +31,9 @@ java -cp "/x/LTR/lib/*" IndexTREC -settings settings.hjson \
                                   -stop  ap/ser17.txt      \
                                   -stem  PorterStemFilter
 
+(Additional settings exist; any setting that is valid in the settings file
+can be provided on the command line with a '-' prefix.)
+
 AP - The string passed as -index is a directory where Lucene will
 write the index.
 
@@ -48,6 +51,9 @@ java -cp "/x/LTR/lib/*" BatchSearch -settings   settings.hjson  \
                                     -similarity BM25Similarity  \
                                     -stop       ap/ser17.txt    \
                                     -stem       PorterStemFilter
+
+(Additional settings exist; any setting that is valid in the settings file
+can be provided on the command line with a '-' prefix.)
 
 ap/query-l.txt - A plain text file containing formatted TREC
 queries. Each query is enclosed in a <TOP> tag and the text is placed
@@ -87,6 +93,22 @@ Indexing + retrieval options:
     stopFile    --  The path to the stop word list file to use during indexing
                     or retrieval. Use "None" if no stopping should be performed
                     (default).
+    tokenizer   --  One of three options: 
+                        WhitespaceTokenizer (default) -- delimits tokens based
+                            on whitespace; this is an alias for
+                            org.apache.lucene.analysis.core.WhitespaceTokenizer
+                        ClassicTokenizer -- delmits tokens based on whitespace
+                            and punctuation (which is removed, with some
+                            exceptions). This is an alias for
+                            org.apache.lucene.analysis.standard.ClassicTokenizer
+                        custom -- use this to provide the fully qualified class
+                            name of a tokenizer under the 'customTokenizer'
+                            setting (see below). This must have a default
+                            constructor.
+
+    customTokenizer -- Default is null. Only considered if 'tokenizer' is set
+                    to 'custom'. This should be a fully qualified class name
+                    and the class must have a default constructor.
     
     stemmer     --  The name of the stemmer to use during indexing or retrieval.
                     See NOTES.txt for a list of available stemmers. Set to 

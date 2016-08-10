@@ -8,6 +8,7 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Analyzer.TokenStreamComponents;
 import org.apache.lucene.analysis.core.*;
+import org.apache.lucene.analysis.standard.*;
 import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.analysis.en.PorterStemFilter;
 import org.apache.lucene.analysis.en.EnglishMinimalStemFilter;
@@ -18,7 +19,9 @@ public class TrecAnalyzer extends Analyzer
 {
     String       stemmer   = null;
     CharArraySet stopwords = null;
-    
+    String       tokenizer = null;
+    String       customTokenizer = null;   
+ 
     public TrecAnalyzer(LTRSettings settings)
     {
         super();
@@ -39,15 +42,36 @@ public class TrecAnalyzer extends Analyzer
             
         if (!settings.stemmer.equals("None"))
             stemmer = settings.stemmer;
+
+        tokenizer = settings.tokenizer;
+        customTokenizer = settings.customTokenizer;
     }
     
     @Override
     protected TokenStreamComponents createComponents(String fieldName)
     {
-        Tokenizer   source = new WhitespaceTokenizer();
-        TokenStream filter = new LowerCaseFilter(source); 
+        Tokenizer   source = null;
+        TokenStream filter;
+        String      pkg = "org.apache.lucene.analysis.en.";
+
+        // Plug in the tokenizer specified by the user.
+        // ClassicTokenizer.
+        if (tokenizer.equals("ClassicTokenizer"))
+            source = new ClassicTokenizer(); 
+        // Custom tokenizer.
+        else if (tokenizer.equals("custom") && customTokenizer != null)
+            try{
+                source = (Tokenizer) Class.forName(customTokenizer)
+                    .getConstructor().newInstance();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        // If all else fails, default to the WhitespaceTokenizer.
+        else
+            source = new WhitespaceTokenizer();
+
         // all the stemmers need lower case tokens
-        String      pkg    = "org.apache.lucene.analysis.en.";
+        filter = new LowerCaseFilter(source); 
          
         if (stopwords != null)
             filter = new StopFilter(filter, stopwords);
