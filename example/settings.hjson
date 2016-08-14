@@ -14,9 +14,9 @@
     tokenizer:          ClassicTokenizer
 
     ## If we wanted to use a different tokenizer, say Lucene's KeywordTokenizer,
-    ## these are the settings we would use.
-    #tokenizer:          custom
-    #customTokenizer:    org.apache.lucene.analysis.core.KeywordTokenizer
+    ## this is the setting we would use.
+    #tokenizer:          org.apache.lucene.analysis.core.KeywordTokenizer
+
 
     ## INDEXING OPTIONS
  

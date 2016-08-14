@@ -35,7 +35,6 @@ public class LTRSettings {
     public String   indexPath;
     public String   docsPath;
     public String   tokenizer;
-    public String   customTokenizer;
     public String   stopFile;
     public String   stemmer;
     public String   similarity;
@@ -64,7 +63,6 @@ public class LTRSettings {
         indexPath           = DEFAULT_INDEX_PATH;
         docsPath            = DEFAULT_DOCS_PATH;
         tokenizer           = DEFAULT_TOKENIZER;
-        customTokenizer     = DEFAULT_CUSTOM_TOKENIZER;
         stemmer             = DEFAULT_STEMMER;
         stopFile            = DEFAULT_STOP_FILE;
         returnedResultCount = DEFAULT_RESULT_COUNT;
@@ -102,8 +100,6 @@ public class LTRSettings {
                 similarity = args[i+1];
             else if ("-tokenizer".equals(args[i])) 
                 tokenizer = args[i+1];
-            else if ("-customTokenizer".equals(args[i])) 
-                customTokenizer = args[i+1];
             else if ("-returnedResultCount".equals(args[i])) 
                 returnedResultCount = Integer.parseInt(args[i+1]);
             else if ("-parser".equals(args[i])) 

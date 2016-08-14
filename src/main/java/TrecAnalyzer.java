@@ -20,7 +20,6 @@ public class TrecAnalyzer extends Analyzer
     String       stemmer   = null;
     CharArraySet stopwords = null;
     String       tokenizer = null;
-    String       customTokenizer = null;   
  
     public TrecAnalyzer(LTRSettings settings)
     {
@@ -44,7 +43,6 @@ public class TrecAnalyzer extends Analyzer
             stemmer = settings.stemmer;
 
         tokenizer = settings.tokenizer;
-        customTokenizer = settings.customTokenizer;
     }
     
     @Override
@@ -58,17 +56,18 @@ public class TrecAnalyzer extends Analyzer
         // ClassicTokenizer.
         if (tokenizer.equals("ClassicTokenizer"))
             source = new ClassicTokenizer(); 
+        // WhitespaceTokenizer.
+        else if (tokenizer.equals("WhitespaceTokenizer"))
+            source = new WhitespaceTokenizer();
         // Custom tokenizer.
-        else if (tokenizer.equals("custom") && customTokenizer != null)
+        else 
             try{
-                source = (Tokenizer) Class.forName(customTokenizer)
+                source = (Tokenizer) Class.forName(tokenizer)
                     .getConstructor().newInstance();
             } catch(Exception e) {
-                e.printStackTrace();
+                System.err.println("Tokenizer not found: "+ tokenizer);
+                System.exit(1);
             }
-        // If all else fails, default to the WhitespaceTokenizer.
-        else
-            source = new WhitespaceTokenizer();
 
         // all the stemmers need lower case tokens
         filter = new LowerCaseFilter(source); 
