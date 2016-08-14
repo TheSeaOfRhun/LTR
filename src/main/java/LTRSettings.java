@@ -135,4 +135,13 @@ public class LTRSettings {
     public String toString(){
         return (new Gson()).toJson(this);
     }
+
+    /**
+     * Creates a deep copy of this instance.
+     *
+     * @return A deep copy of this instance.
+     */
+    public LTRSettings deepCopy(){
+        return (new Gson()).fromJson(toString(), LTRSettings.class);
+    }
 }
