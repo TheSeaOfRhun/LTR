@@ -49,7 +49,7 @@ public class BatchSearch
                 
         if (args.length == 0 || (args.length > 0 && 
                 ("-h".equals(args[0]) || "-help".equals(args[0])))) {
-            System.out.println(usage);
+            System.err.println(usage);
             System.exit(0);
         }
 
@@ -92,69 +92,15 @@ public class BatchSearch
             System.exit(0);
         }
 
-        String pkg = "org.apache.lucene.search.similarities.";
-        Similarity similarity = null;
-
-        if (ltrSettings.similarity.equals("DFRSimilarity")) {
-            similarity = (Similarity)Class
-                .forName(pkg + ltrSettings.similarity)
-                .getConstructor(BasicModel.class,
-                                AfterEffect.class,
-                                Normalization.class)
-                .newInstance(new BasicModelP(),
-                             new AfterEffectL(),
-                             new NormalizationH2());
-        }
-        else if (ltrSettings.similarity.equals("IBSimilarity")) {
-            similarity = (Similarity)Class
-                .forName(pkg + ltrSettings.similarity)
-                .getConstructor(Distribution.class,
-                                Lambda.class,
-                                Normalization.class)
-                .newInstance(new DistributionSPL(),
-                             new LambdaDF(),
-                             new NormalizationH2());
-        }
-        else if (ltrSettings.similarity.endsWith("Similarity")) {
-            similarity = (Similarity)Class
-                .forName(pkg + ltrSettings.similarity)
-                .getConstructor()
-                .newInstance();
-        }
-        else {
-            similarity = (Similarity)Class
-                .forName(ltrSettings.similarity)
-                .getConstructor()
-                .newInstance();
-        }
-
-        if (similarity == null) {
-            System.out.println("BatchSearch: Unsupported similarity class: "+ 
-            similarity +"\n");
+        try {
+            processQueryFile(ltrSettings);
+        } catch(Exception e){
+            System.out.println("BatchSearch error: "+ e.getMessage() +"\n");
+            e.printStackTrace();
             System.exit(0);
         }
-                
-        IndexReader reader = DirectoryReader.open(FSDirectory.open(
-            Paths.get(ltrSettings.indexPath)));
-        IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(similarity);
-        TrecAnalyzer analyzer = new TrecAnalyzer(ltrSettings);
-        SimpleQueryParser parser = new SimpleQueryParser(analyzer, 
-            ltrSettings.searchField);
-                
-        org.jsoup.nodes.Document soup;
-        String str, qid, txt;
-        str = FileUtils.readFileToString(new File(ltrSettings.queryFile));
-        soup = Jsoup.parse(str);
-        for (Element elm : soup.select("TOP")) {
-            qid = elm.child(0).text().trim();
-            txt = elm.child(1).text();
-            Query query = parser.parse(txt);
-            doBatchSearch(ltrSettings, searcher, qid, query, 
-                ltrSettings.similarity, analyzer);
-        }
-        reader.close();
     }
+
 
     /**
      * Concatenates the values across all instances of a field within the
@@ -183,6 +129,147 @@ public class BatchSearch
         return concatenatedValue.toString();
     }
 
+
+    /**
+     * Creates a Similarity instance from the given model string. It is assumed
+     * that model corresponds to a Similarity implementation in the
+     * org.apache.lucene.search.similarities package, or that it is fully
+     * qualified.
+     *
+     * @param model Either a fully qualified Similarity implementation or the 
+     *              name of a Similarity implementation in the
+     *              org.apache.lucene.search.similarities package.
+     * @return An instance of the specified model.
+     */
+    public static Similarity getSimilarityModel(String model)
+    throws Exception {
+        String pkg = "org.apache.lucene.search.similarities.";
+        Similarity similarity = null;
+
+        try {
+            if (model.equals("DFRSimilarity")) {
+                similarity = (Similarity)Class
+                    .forName(pkg + model)
+                    .getConstructor(BasicModel.class,
+                                    AfterEffect.class,
+                                    Normalization.class)
+                    .newInstance(new BasicModelP(),
+                                 new AfterEffectL(),
+                                 new NormalizationH2());
+            }
+            else if (model.equals("IBSimilarity")) {
+                similarity = (Similarity)Class
+                    .forName(pkg + model)
+                    .getConstructor(Distribution.class,
+                                    Lambda.class,
+                                    Normalization.class)
+                    .newInstance(new DistributionSPL(),
+                                 new LambdaDF(),
+                                 new NormalizationH2());
+            }
+            else if (model.endsWith("Similarity")) {
+                similarity = (Similarity)Class
+                    .forName(pkg + model)
+                    .getConstructor()
+                    .newInstance();
+            }
+            else {
+                similarity = (Similarity)Class
+                    .forName(model)
+                    .getConstructor()
+                    .newInstance();
+            }
+        } catch(Exception e) {
+            throw new Exception("Similarity class not found: "+ model);
+        }
+
+        return similarity;
+    }
+
+    /**
+     * Extracts queries from the query file specified in the given settings.
+     * Each query is run through the specified pre-processors if supplied,
+     * then to doBatchSearch.
+     *
+     * @param settings The settings to use.
+     */
+    public static void processQueryFile(LTRSettings ltrSettings)
+    throws Exception {
+        LTRSettings modifiedSettings;
+        Query query;
+        String str, qid, queryText;
+        QueryPreProcessor preProcessor;
+        Element preProcessorElm;
+        TrecAnalyzer analyzer;
+        SimpleQueryParser parser;
+
+        Similarity similarity = getSimilarityModel(ltrSettings.similarity);
+                
+        IndexReader reader = DirectoryReader.open(FSDirectory.open(
+            Paths.get(ltrSettings.indexPath)));
+        IndexSearcher searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(similarity);
+
+        // The analyzer and query parser may change based on the query
+        // preprocessor.
+        TrecAnalyzer originalAnalyzer = new TrecAnalyzer(ltrSettings);
+        SimpleQueryParser originalParser = new SimpleQueryParser(
+            originalAnalyzer, ltrSettings.searchField);
+                
+
+        org.jsoup.nodes.Document soup;
+        str = FileUtils.readFileToString(new File(ltrSettings.queryFile));
+        soup = Jsoup.parse(str);
+        for (Element elm : soup.select("top")) {
+            qid = elm.select("num").first().text().trim();
+
+            analyzer = originalAnalyzer;
+            parser = originalParser;
+
+            // Check if there is any preprocessing that needs to happen.
+            preProcessorElm = elm.select("preprocessor").first();
+            if(preProcessorElm != null && preProcessorElm.hasAttr("class")){
+                try{
+                    preProcessor =  (QueryPreProcessor) Class
+                        .forName(preProcessorElm.attr("class"))
+                        .getConstructor()
+                        .newInstance();
+                } catch(Exception e){
+                    throw new Exception("Could not find query preprocessor "+
+                        "class: "+ preProcessorElm.attr("class"));
+                }
+
+                preProcessor.initialize(preProcessorElm.html(), ltrSettings);
+                queryText = preProcessor.getQuery();
+                if(preProcessor.modifiesSettings()){
+                    modifiedSettings = preProcessor.getModifiedSettings();
+                    analyzer = new TrecAnalyzer(modifiedSettings);
+                    parser = new SimpleQueryParser(analyzer, 
+                        modifiedSettings.searchField);
+                }
+            } else {
+                queryText = elm.select("text").first().text();
+            }
+
+            query = parser.parse(queryText);
+            doBatchSearch(ltrSettings, searcher, qid, query, 
+                ltrSettings.similarity, analyzer);
+        }
+        reader.close();       
+    }
+
+    
+    /**
+     * Runs a query and displays the restults in TREC format.
+     *
+     * @param settings The settings to use (e.g., specifying how many results
+     *                 to display, whether to include snippets, etc.).
+     * @param searcher The Lucene IndexSearcher to issue the query to.
+     * @param qid The query id to include in the results output.
+     * @param query The query to issue.
+     * @param runtag The tag to include in the results output.
+     * @param analyzer The Lucene Analyzer to use in processing the query.
+     */
     public static void doBatchSearch(LTRSettings settings,
                                      IndexSearcher searcher,
                                      String qid, Query query,
@@ -242,5 +329,6 @@ public class BatchSearch
             }
         }
     }
+
 
 }
