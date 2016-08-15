@@ -76,27 +76,22 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
      * documents.
      */
     public class TermStats {
-        int relDocCount, nonRelDocCount;
         double relTermLikelihoodSum, nonRelTermLikelihoodSum;
 
         public TermStats(){
-            relDocCount = 0;
-            nonRelDocCount = 0;
             relTermLikelihoodSum = 0.0;
             nonRelTermLikelihoodSum = 0.0;
         }
 
         public void addRelTermLikelihood(double likelihood) {
             relTermLikelihoodSum += likelihood;
-            relDocCount += 1;
         }
 
         public void addNonRelTermLikelihood(double likelihood) {
             nonRelTermLikelihoodSum += likelihood;
-            nonRelDocCount += 1;
         }
 
-        public double getNormalizedProb(){
+        public double getNormalizedProb(int relDocCount, int nonRelDocCount){
             return (nonRelDocCount * (relTermLikelihoodSum+OOV)) /
                    (relDocCount * (nonRelTermLikelihoodSum+OOV));
         }
@@ -150,8 +145,12 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
     throws Exception {
         org.jsoup.nodes.Document soup;
 
+        // Make a copy of the global settings. We need to ensure that the
+        // classic tokenizer so terms can be extracted.
+        this.globalSettings = globalSettings.deepCopy();
+        this.globalSettings.tokenizer = "ClassicTokenizer";
+
         // Initialize the index reader, etc.
-        this.globalSettings = globalSettings;
         IndexReader reader = DirectoryReader.open(FSDirectory.open(
             Paths.get(globalSettings.indexPath)));
         searcher = new IndexSearcher(reader);
@@ -172,11 +171,11 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
                     "attribute: "+ feedbackDocElm);
             
             relValue = feedbackDocElm.attr("relevant");
-            if(relValue != "true" && relValue != "false")
+            if(!relValue.equals("true") && !relValue.equals("false"))
                 throw new Exception("Feedback <doc> 'relevant' attribute "+
                     "value invalid: "+ relValue);
 
-            feedbackDoc.isRelevant = relValue == "true";
+            feedbackDoc.isRelevant = relValue.equals("true");
 
             // Ensure there is a docno or document content associated with the
             // document.
@@ -228,7 +227,6 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
         StringBuilder queryString;
         HashMap<String,TermStats> relevanceModel = 
             new HashMap<String,TermStats>();
-        
 
         // Extract term stats from relevant documents.
         for(FeedbackDocument relDoc : relevantDocs){
@@ -240,6 +238,7 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
                 docStats = getDocTermsFromContent(relDoc.content, analyzer);
                 
             for(String term : docStats.termCounts.keySet()){
+
                 if(!relevanceModel.containsKey(term))
                     relevanceModel.put(term, new TermStats());
 
@@ -270,9 +269,12 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
 
         // Normalize terms.
         queryString = new StringBuilder();
-        for(String term : relevanceModel.keySet())
+        for(String term : relevanceModel.keySet()){
             queryString.append(term).append("^").append( 
-                relevanceModel.get(term).getNormalizedProb()).append(" ");
+                relevanceModel.get(term).getNormalizedProb(
+                    relevantDocs.size()+1, nonRelevantDocs.size()+1)).
+                    append(" ");
+        }
         return queryString.toString();
     }
 
@@ -285,8 +287,9 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
      * @return A DocStats instance containing all terms and their counts
      *         extracted from the document with the given docno.
      */
-    public DocStats getDocTermsFromIndex(String docno, Analyzer analyzer, 
-    IndexSearcher searcher) {
+    public DocStats getDocTermsFromIndex(String docno, 
+                                         Analyzer analyzer, 
+                                         IndexSearcher searcher) {
         TopDocs results;
         DocStats docStats = new DocStats();
 
@@ -310,6 +313,8 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
                 // Extract the tokens.
                 while(contentStream.incrementToken())
                     docStats.addTerm(charTermAttr.toString(), 1);
+            
+                contentStream.close();
             }
         } catch(Exception e){
             System.err.println("Error finding feedback documents:  "+ 
@@ -341,6 +346,8 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
             // Extract the tokens.
             while(contentStream.incrementToken())
                 docStats.addTerm(charTermAttr.toString(), 1);
+
+            contentStream.close();
         } catch(Exception e){
             System.err.println("Error finding feedback documents:  "+ 
                 e.getMessage());
@@ -349,5 +356,27 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
         return docStats;
     }
 
+
+    /**
+     * This query preprocessor require changes to the settings if stopping or
+     * stemming are requested.
+     *
+     * @return Whether the settings need to change when running the query.
+     */
+    public boolean modifiesSettings(){
+        return !globalSettings.stopFile.equals("None") ||
+               !globalSettings.stemmer.equals("None");
+    }
+
+    /**
+     * @returns A deep copy of the LTRSettings with the stopper and stemmer 
+     * removed.
+     */
+    public LTRSettings getModifiedSettings() {
+        LTRSettings newSettings = globalSettings.deepCopy();
+        newSettings.stopFile = "None";
+        newSettings.stemmer = "None";
+        return newSettings;
+    }
 
 }

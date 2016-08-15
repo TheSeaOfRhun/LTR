@@ -11,4 +11,8 @@ public interface QueryPreProcessor {
         throws Exception;
 
     public String getQuery();
+
+    public boolean modifiesSettings();
+
+    public LTRSettings getModifiedSettings();
 }
