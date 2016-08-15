@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.TreeSet;
 import java.util.HashMap;
 import java.lang.StringBuilder;
 
@@ -119,14 +120,50 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
     }
 
     /**
+     * A wrapper for query terms and their weights. This helps with sorting.
+     */
+    public class WeightedTerm implements Comparable<WeightedTerm> {
+        public String term;
+        public double weight;
+        
+        public WeightedTerm(){ 
+            this(null, 0.0);
+        }
+
+        public WeightedTerm(String term, double weight) {
+            this.term = term;
+            this.weight = weight;
+        }
+
+        /**
+         * Returns a reverse-natural ordering (higher first).
+         */
+        public int compareTo(WeightedTerm other){
+            double diff = weight - other.weight;
+            if(diff == 0){
+                return -1*term.compareTo(other.term);
+            } else if(diff < 0) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+
+    }
+
+    /**
      * Reads in the settings and index reader. The settings should include
      * the following fields:
      *
      *    feedback -- denotes the feedback section.
+     *
      *    topTermsToKeep -- an optional child of feedback; if present, this
      *                denotes the number of top ranking terms that will be
      *                returned by getQuery(). Leave out or set to -1 to use all
-     *                non-stopped terms from relevant documents.
+     *                non-stopped terms from relevant documents. Otherwise,
+     *                this number should be greater than 1 (0 will cause an
+     *                exception to be thrown).
+     *
      *    doc      -- a child of feedback; can occur more than once;
      *                Attributes:
      *                  relevant -- REQUIRED. One of "true" or "false".
@@ -144,6 +181,7 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
     public void initialize(String xmlSettings, LTRSettings globalSettings) 
     throws Exception {
         org.jsoup.nodes.Document soup;
+        Element feedbackElm, topTermsToKeepElm;
 
         // Make a copy of the global settings. We need to ensure that the
         // classic tokenizer so terms can be extracted.
@@ -161,7 +199,14 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
 
         // Parse the settings.
         soup = Jsoup.parse(xmlSettings);
-        for(Element feedbackDocElm : soup.select("doc")){
+        feedbackElm = soup.select("feedback").first();
+
+        // Make sure there's a feedback section.
+        if(feedbackElm == null)
+            throw new Exception("Query XML missing <feedback> element:\n"+
+                xmlSettings);
+            
+        for(Element feedbackDocElm : feedbackElm.select("doc")){
             FeedbackDocument feedbackDoc = new FeedbackDocument();
             String relValue;
 
@@ -195,11 +240,14 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
                 nonRelevantDocs.add(feedbackDoc);
         }
 
-        // Extract topTermsToUse from XML.
+        // Extract topTermsToKeep from XML.
         topTermsToKeep = -1;
-        for(Element topTermsToKeepElm : soup.select("topTermsToKeep"))
-            if(topTermsToKeepElm.hasText())
-                topTermsToKeep = Integer.parseInt(topTermsToKeepElm.text());
+        topTermsToKeepElm = feedbackElm.select("topTermsToKeep").first();
+        if(topTermsToKeepElm != null && topTermsToKeepElm.hasText())
+            topTermsToKeep = Integer.parseInt(topTermsToKeepElm.text());
+        if(topTermsToKeep == 0)
+            throw new Exception("In <feedback>, <topTermsToKeep> must be -1 "+
+                "(to use all feedback terms) or greater than 0."); 
         
     }
 
@@ -227,6 +275,7 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
         StringBuilder queryString;
         HashMap<String,TermStats> relevanceModel = 
             new HashMap<String,TermStats>();
+        TreeSet<WeightedTerm> finalTerms = new TreeSet<WeightedTerm>();
 
         // Extract term stats from relevant documents.
         for(FeedbackDocument relDoc : relevantDocs){
@@ -269,12 +318,36 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
 
         // Normalize terms.
         queryString = new StringBuilder();
-        for(String term : relevanceModel.keySet()){
-            queryString.append(term).append("^").append( 
-                relevanceModel.get(term).getNormalizedProb(
-                    relevantDocs.size()+1, nonRelevantDocs.size()+1)).
-                    append(" ");
+
+        // If we're keeping all terms, there's no reason to sort them.
+        if(topTermsToKeep < 0) {
+            for(String term : relevanceModel.keySet()){
+                queryString.append(term).append("^").append( 
+                    relevanceModel.get(term).getNormalizedProb(
+                        relevantDocs.size()+1, nonRelevantDocs.size()+1)).
+                        append(" ");
+            }
+        // Otherwise, we need to normalize and then sort.
+        } else {
+            int termsUsed = 0;
+
+            // Normalize each term.
+            for(String term : relevanceModel.keySet())
+                finalTerms.add(new WeightedTerm(
+                    term, relevanceModel.get(term).getNormalizedProb(
+                        relevantDocs.size()+1, nonRelevantDocs.size()+1)));
+
+            // Pull out the top terms and add them to the queryString.
+            for(WeightedTerm term : finalTerms){
+                if(termsUsed < topTermsToKeep)
+                    queryString.append(term.term).append("^").
+                        append(term.weight).append(" ");
+                else
+                    break;
+                termsUsed++;
+            }
         }
+
         return queryString.toString();
     }
 

@@ -101,35 +101,6 @@ public class BatchSearch
         }
     }
 
-
-    /**
-     * Concatenates the values across all instances of a field within the
-     * given document. E.g., if the field name is "a", the value of all "a"
-     * fields within the document will be concatenated into one string and 
-     * returned.
-     *
-     * @param doc The document to extract field values from.
-     * @param fieldName The field to extract.
-     * @return A concatenation of the field values.
-     */
-    public static String concatenateFieldValues(Document doc, String fieldName){
-        StringBuilder concatenatedValue = new StringBuilder();
-        String[] fieldValues = doc.getValues(fieldName);
-
-        // A little shortcut in the event that this field only occurs once.
-        if(fieldValues.length == 1)
-            return fieldValues[0];
-
-        // In all other cases, perform the concatenation.
-        for(int i = 0; i < fieldValues.length; i++){
-            concatenatedValue.append(fieldValues[i]);
-            if(i < fieldValues.length-1)
-                concatenatedValue.append(" ");
-        }
-        return concatenatedValue.toString();
-    }
-
-
     /**
      * Creates a Similarity instance from the given model string. It is assumed
      * that model corresponds to a Similarity implementation in the
@@ -239,18 +210,28 @@ public class BatchSearch
                         "class: "+ preProcessorElm.attr("class"));
                 }
 
-                preProcessor.initialize(preProcessorElm.html(), ltrSettings);
+                // The preprocessor gets the entire query's XML.
+                preProcessor.initialize(elm.html(), ltrSettings);
+
+                // The preprocessor provides the query text for this query.
                 queryText = preProcessor.getQuery();
+
+                // Check if the preprocessor requires updating the LTR settings
+                // for this query. That will require initializing a new
+                // analyzer and searcher.
                 if(preProcessor.modifiesSettings()){
                     modifiedSettings = preProcessor.getModifiedSettings();
                     analyzer = new TrecAnalyzer(modifiedSettings);
                     parser = new SimpleQueryParser(analyzer, 
                         modifiedSettings.searchField);
                 }
+
+            // Only extract the <text> field if no preprocessing is to occur.
             } else {
                 queryText = elm.select("text").first().text();
             }
 
+            // Parse and run the query.
             query = parser.parse(queryText);
             doBatchSearch(ltrSettings, searcher, qid, query, 
                 ltrSettings.similarity, analyzer);
@@ -329,6 +310,35 @@ public class BatchSearch
             }
         }
     }
+
+    /**
+     * Concatenates the values across all instances of a field within the
+     * given document. E.g., if the field name is "a", the value of all "a"
+     * fields within the document will be concatenated into one string and 
+     * returned.
+     *
+     * @param doc The document to extract field values from.
+     * @param fieldName The field to extract.
+     * @return A concatenation of the field values.
+     */
+    public static String concatenateFieldValues(Document doc, String fieldName){
+        StringBuilder concatenatedValue = new StringBuilder();
+        String[] fieldValues = doc.getValues(fieldName);
+
+        // A little shortcut in the event that this field only occurs once.
+        if(fieldValues.length == 1)
+            return fieldValues[0];
+
+        // In all other cases, perform the concatenation.
+        for(int i = 0; i < fieldValues.length; i++){
+            concatenatedValue.append(fieldValues[i]);
+            if(i < fieldValues.length-1)
+                concatenatedValue.append(" ");
+        }
+        return concatenatedValue.toString();
+    }
+
+
 
 
 }
