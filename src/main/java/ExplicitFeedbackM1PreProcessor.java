@@ -179,7 +179,8 @@ public class ExplicitFeedbackM1PreProcessor implements QueryPreProcessor {
      * @throws Exception if require settings are not present.
      */
     public void initialize(String xmlSettings, LTRSettings globalSettings) 
-    throws Exception {
+            throws Exception {
+
         org.jsoup.nodes.Document soup;
         Element feedbackElm, topTermsToKeepElm;
 
