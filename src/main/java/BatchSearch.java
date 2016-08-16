@@ -6,9 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.HashSet;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -170,12 +172,12 @@ public class BatchSearch
         Query query;
         String str, qid, queryText;
         QueryPreProcessor preProcessor;
-        Element preProcessorElm;
-        TrecAnalyzer analyzer;
-        SimpleQueryParser parser;
+        Element preProcessorElm, postProcessorElm;
+        TrecAnalyzer originalAnalyzer, analyzer;
+        SimpleQueryParser originalParser, parser;
+        QueryPostProcessor postProcessor;
 
-        Similarity similarity = getSimilarityModel(ltrSettings.similarity);
-                
+        Similarity similarity = getSimilarityModel(ltrSettings.similarity);        
         IndexReader reader = DirectoryReader.open(FSDirectory.open(
             Paths.get(ltrSettings.indexPath)));
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -183,11 +185,11 @@ public class BatchSearch
 
         // The analyzer and query parser may change based on the query
         // preprocessor.
-        TrecAnalyzer originalAnalyzer = new TrecAnalyzer(ltrSettings);
-        SimpleQueryParser originalParser = new SimpleQueryParser(
+        originalAnalyzer = new TrecAnalyzer(ltrSettings);
+        originalParser = new SimpleQueryParser(
             originalAnalyzer, ltrSettings.searchField);
                 
-
+        // Parse the query file.
         org.jsoup.nodes.Document soup;
         str = FileUtils.readFileToString(new File(ltrSettings.queryFile));
         soup = Jsoup.parse(str);
@@ -196,6 +198,7 @@ public class BatchSearch
 
             analyzer = originalAnalyzer;
             parser = originalParser;
+            postProcessor = null;
 
             // Check if there is any preprocessing that needs to happen.
             preProcessorElm = elm.select("preprocessor").first();
@@ -203,8 +206,7 @@ public class BatchSearch
                 try{
                     preProcessor =  (QueryPreProcessor) Class
                         .forName(preProcessorElm.attr("class"))
-                        .getConstructor()
-                        .newInstance();
+                        .getConstructor().newInstance();
                 } catch(Exception e){
                     throw new Exception("Could not find query preprocessor "+
                         "class: "+ preProcessorElm.attr("class"));
@@ -231,10 +233,25 @@ public class BatchSearch
                 queryText = elm.select("text").first().text();
             }
 
+
+            // Check if there is a post processor specified.
+            postProcessorElm = elm.select("postprocessor").first();
+            if(postProcessorElm != null && postProcessorElm.hasAttr("class")){
+                try {
+                    postProcessor = (QueryPostProcessor) Class
+                        .forName(postProcessorElm.attr("class"))
+                        .getConstructor().newInstance();
+                } catch(Exception e) {
+                    throw new Exception("Could not find query postprocessor "+
+                        "class: "+ postProcessorElm.attr("class"));
+                }
+                postProcessor.initialize(elm.html(), ltrSettings, queryText);
+            }
+
             // Parse and run the query.
             query = parser.parse(queryText);
             doBatchSearch(ltrSettings, searcher, qid, query, 
-                ltrSettings.similarity, analyzer);
+                ltrSettings.similarity, analyzer, postProcessor);
         }
         reader.close();       
     }
@@ -250,19 +267,30 @@ public class BatchSearch
      * @param query The query to issue.
      * @param runtag The tag to include in the results output.
      * @param analyzer The Lucene Analyzer to use in processing the query.
+     * @param postProcessor An optional QueryPostProcessor to run the retrieved
+     *                      results through. Can be null.
+     * @throws Exception
      */
-    public static void doBatchSearch(LTRSettings settings,
-                                     IndexSearcher searcher,
-                                     String qid, Query query,
-                                     String runtag, Analyzer analyzer)
-    throws IOException {
+    public static void doBatchSearch(LTRSettings settings, 
+            IndexSearcher searcher, String qid, Query query, String runtag, 
+            Analyzer analyzer, QueryPostProcessor postProcessor) 
+            throws Exception {
+
+        ScoreDoc[] hits;
+        HashSet<String> seen;
+        int numTotalHits, start, end;
+
         TopDocs results = searcher.search(query, settings.returnedResultCount);
-        ScoreDoc[] hits = results.scoreDocs;
-        HashMap<String, String> seen = 
-            new HashMap<String, String>(settings.returnedResultCount);
-        int numTotalHits = results.totalHits;
-        int start = 0;
-        int end = numTotalHits < settings.returnedResultCount ? 
+
+        // Run results trhough the preprocessor if necessary.
+        if(postProcessor != null)
+            results = postProcessor.getResults(searcher, results);
+
+        hits = results.scoreDocs;
+        seen = new HashSet<String>(settings.returnedResultCount);
+        numTotalHits = results.totalHits;
+        start = 0;
+        end = numTotalHits < settings.returnedResultCount ? 
             numTotalHits : settings.returnedResultCount;
 
         for (int i = start; i < end; i++) {
@@ -271,9 +299,9 @@ public class BatchSearch
             // There are duplicate document numbers in the
             // FR collection, so only output a given docno
             // once.
-            if (seen.containsKey(docno))
+            if (seen.contains(docno))
                 continue;
-            seen.put(docno, docno);
+            seen.add(docno);
             System.out.println(qid + " " + "Q0" + " " + docno
                                    + " " + i    + " " + hits[i].score
                                    + " " + runtag);
