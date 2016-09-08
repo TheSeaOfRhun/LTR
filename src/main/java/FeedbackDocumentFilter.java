@@ -9,9 +9,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 /**
- * Provides basic methods that all query post-processors should implement.
- * These run after a query is run. They get the global settings, query settings,
- * the query text run, and the retrieved results. Their only output is results.
+ * Removes documents specified as feedback documents from the results list.
  *
  * @author hafeild
  */

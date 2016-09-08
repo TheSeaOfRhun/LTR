@@ -10,3 +10,17 @@
         a sample query
     </TEXT>
 </TOP>
+<!-- Not case sensitive -- TOP or top, both are fine. -->
+<top>
+    <num>3</num>
+    <!-- Here's an example of using explicit relevance feedback. -->
+    <feedback>
+        <topTermsToKeep>3</topTermsToKeep>
+        <doc relevant="true" docno="trec-doc-1"/>
+        <doc relevant="true" docno="trec-doc-3"/>
+        <doc relevant="false" docno="trec-doc-2"/>
+        <doc relevant="false" docno="trec-doc-4"/>
+    </feedback>
+    <preprocessor class="ExplicitFeedbackM1PreProcessor"/>
+    <postprocessor class="FeedbackDocumentFilter"/>
+</top>
