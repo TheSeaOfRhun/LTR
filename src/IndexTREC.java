@@ -121,8 +121,16 @@ public class IndexTREC {
 	str  = FileUtils.readFileToString(new File(file.toString()));
 	soup = Jsoup.parse(str);
 	for (Element elm : soup.select("DOC")) {
-	    docno = elm.child(0).text().trim();
-	    txt   = elm.text();
+	    docno = "x";
+	    txt   = "x";
+	    // docno = elm.child(0).text().trim();
+	    for (Element elm_ : elm.children()) {
+		if(elm_.tagName().equals("docno")) {
+		    docno = elm_.text().trim();
+		    elm_.remove();
+		}
+	    }
+	    txt = elm.text();
 	    Document doc = new Document();
 	    doc.add(new StringField("docno", docno, Field.Store.YES));
 	    doc.add(new TextField("contents", txt, Field.Store.NO));
