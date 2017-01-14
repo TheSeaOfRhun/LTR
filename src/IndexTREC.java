@@ -33,15 +33,21 @@ public class IndexTREC {
 
     public static void main(String[] args) {
 	String usage = "java -cp lib/trec.jar:bin IndexTREC"
-	    + " [-index INDEX_PATH] [-docs DOCS_PATH] "
+	    + " [-m memory(MB)]"
+	    + " [-index INDEX_PATH] [-docs DOCS_PATH]"
 	    + " [-stop STOP_FILE] [-stem STEMMER_NAME]\n";
 
+	double   mem       = 4096.0;
 	String   indexPath = "index";
 	String   docsPath  = null;
 	String[] opt       = new String[2];
 		
 	for(int i=0;i<args.length;i++) {
-	    if ("-index".equals(args[i])) {
+	    if ("-m".equals(args[i])) {
+		mem = Double.parseDouble(args[i+1]);
+		i++;
+	    }
+	    else if ("-index".equals(args[i])) {
 		indexPath = args[i+1];
 		i++;
 	    } else if ("-docs".equals(args[i])) {
@@ -69,16 +75,14 @@ public class IndexTREC {
 
 	try {
 	    System.out.println("Indexing to directory '" + indexPath + "'...");
-
 	    Directory dir = FSDirectory.open(Paths.get(indexPath));
 	    TrecAnalyzer analyzer = new TrecAnalyzer(opt);
 	    IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 	    iwc.setOpenMode(OpenMode.CREATE);
-	    // iwc.setRAMBufferSizeMB(256.0);
+	    iwc.setRAMBufferSizeMB(mem);
+	    iwc.setUseCompoundFile(false);
 	    IndexWriter writer = new IndexWriter(dir, iwc);
 	    indexDocs(writer, docDir);
-	    // writer.forceMerge(1);
-	    writer.close();
 	} catch (IOException e) {
 	    System.out.println(" caught a " + e.getClass() +
 			       "\n with message: " + e.getMessage());
