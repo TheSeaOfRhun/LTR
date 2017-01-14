@@ -83,6 +83,7 @@ public class IndexTREC {
 	    iwc.setUseCompoundFile(false);
 	    IndexWriter writer = new IndexWriter(dir, iwc);
 	    indexDocs(writer, docDir);
+	    writer.close();
 	} catch (IOException e) {
 	    System.out.println(" caught a " + e.getClass() +
 			       "\n with message: " + e.getMessage());
