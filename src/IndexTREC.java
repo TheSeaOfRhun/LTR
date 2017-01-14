@@ -127,7 +127,6 @@ public class IndexTREC {
 	for (Element elm : soup.select("DOC")) {
 	    docno = "x";
 	    txt   = "x";
-	    // docno = elm.child(0).text().trim();
 	    for (Element elm_ : elm.children()) {
 		if(elm_.tagName().equals("docno")) {
 		    docno = elm_.text().trim();
