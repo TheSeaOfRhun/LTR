@@ -35,7 +35,8 @@ public class IndexTREC {
     public static void main(String[] args) {
         String usage = "java -cp lib/trec.jar:bin IndexTREC\n"
             + "\t[-settings SETTINGS_FILE] [-index INDEX_PATH]\n"
-            + "\t[-docs DOCS_PATH] [-stop STOP_FILE] [-stem STEMMER_NAME] ]\n"
+            + "\t[-docs DOCS_PATH] [-stop STOP_FILE] [-stem STEMMER_NAME]\n"
+            + "\t[-m MEMORY_MiB]"
             + "\nCommand line options will override values in SETTINGS_FILE\n"
             + "if a settings file is provided. Use 'None' in place of "
             + "STOP_FILE\nor STEMMER_NAME to use no stoplist or stemmer (this "
@@ -94,10 +95,9 @@ public class IndexTREC {
             TrecAnalyzer analyzer = new TrecAnalyzer(ltrSettings);
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
             iwc.setOpenMode(OpenMode.CREATE);
-            // iwc.setRAMBufferSizeMB(256.0);
+            iwc.setRAMBufferSizeMB(ltrSettings.memory);
             IndexWriter writer = new IndexWriter(dir, iwc);
             indexDocs(ltrSettings, writer, docDir);
-            // writer.forceMerge(1);
             writer.close();
         } catch (IOException e) {
             System.out.println(" caught a " + e.getClass() +

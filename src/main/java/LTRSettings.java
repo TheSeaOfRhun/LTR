@@ -25,6 +25,7 @@ public class LTRSettings {
     public static final String  DEFAULT_SIMILARITY       = null;
     public static final String  DEFAULT_SEARCH_FIELD     = "contents";
     public static final String  DEFAULT_PARSER           = "auto";
+    public static final double  DEFAULT_MEMORY           = 4096.0; 
 
     public ArrayList<String> warcFieldsToIndex;
     public ArrayList<String> trecFieldsToIndex;
@@ -41,6 +42,7 @@ public class LTRSettings {
     public String   queryFile;
     public String   searchField; 
     public String   parser;
+    public double   memory;
 
     /**
      * Creates an LTRSettings file from an HJSON file.
@@ -75,6 +77,7 @@ public class LTRSettings {
         searchField         = DEFAULT_SEARCH_FIELD;
         maxSnippetFragments = DEFAULT_SNIPPET_FRAGS;
         parser              = DEFAULT_PARSER;
+        memory              = DEFAULT_MEMORY;
     }
 
     /**
@@ -114,6 +117,8 @@ public class LTRSettings {
                 warcFieldsToIndex = csvToArrayList(args[i+1]);
             else if ("-trecFieldsToIndex".equals(args[i])) 
                 trecFieldsToIndex = csvToArrayList(args[i+1]);
+            else if ("-m".equals(args[i]))
+                memory = Double.parseDouble(args[i+1]);
             else
                 i--; 
         } 
