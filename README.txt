@@ -20,7 +20,7 @@ from: http://kak.tx0.org/IR/
 ----------------------------------------------------------------------
 COMPILING
 
-Type "mvn package" in a shell. Tested with Maven 3.0.5.
+Type "mvn package" in a shell. Tested with Maven 3.0.5 and 3.5.0.
 
 ----------------------------------------------------------------------
 INDEXING
@@ -128,6 +128,9 @@ Indexing only options:
     trecFieldsToIndex
                 --  Similar to warcFieldsToIndex, but for TREC text and web
                     documents.
+    
+    memory      --  The amount of memory (in MiB) to use for the indexing.
+                    Defaults to 4096.
 
 Retrieval only options:
 
