@@ -1,7 +1,7 @@
-LTR
+Lucene Mod
 
-Rup Palchowdhury
-rup.palchowdhury [at] gmail [dot] com
+Sauparna Palchowdhury
+sauparna.palc [at] gmail [dot] com
 
 Henry Feild
 hfeild [at] endicott [dot] edu
@@ -9,13 +9,12 @@ hfeild [at] endicott [dot] edu
 ----------------------------------------------------------------------
 DESCRIPTION
 
-LTR is Lucene (5.4.0) with some modifications for processing TREC
+This is Lucene (5.4.0) with some modifications for processing TREC
 test-collections. The way to use it is to pass to 'IndexTREC', at the
 command-line, a TREC document corpus to index, and then retrieve
 documents with 'BatchSearch' and a set of queries as input.
 
-To run the commands described below you will need the sample TREC data
-from: http://kak.tx0.org/IR/
+To run the commands described below you will need the sample TREC data: http://sauparna.sdf.org/Search/.files/ap.tgz
 
 ----------------------------------------------------------------------
 COMPILING
